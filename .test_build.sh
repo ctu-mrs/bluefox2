@@ -11,6 +11,7 @@ mkdir -p $MY_WORKSPACE/src
 
 ln -s $USER_REPO_PATH $MY_WORKSPACE/src/user_repo
 
+cd $MY_WORKSPACE/src
 git clone https://github.com/KumarRobotics/camera_base.git
 
 cd $MY_WORKSPACE
