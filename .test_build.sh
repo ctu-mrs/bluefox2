@@ -10,6 +10,9 @@ rm -rf $MY_WORKSPACE
 mkdir -p $MY_WORKSPACE/src
 
 ln -s $USER_REPO_PATH $MY_WORKSPACE/src/user_repo
+
+git clone https://github.com/KumarRobotics/camera_base.git
+
 cd $MY_WORKSPACE
 catkin init
 catkin config --extend /opt/ros/kinetic
