@@ -127,7 +127,7 @@ if [ "$SCRIPTSOURCEDIR" != "$PWD" ]; then
    if [ "$SCRIPTSOURCEDIR" == "" ] || [ "$SCRIPTSOURCEDIR" == "." ]; then
       SCRIPTSOURCEDIR="$PWD"
    fi
-   cd "$SCRIPTSOURCEDIR/../binaries"
+   cd "$SCRIPTSOURCEDIR"
 fi
 
 ### download
