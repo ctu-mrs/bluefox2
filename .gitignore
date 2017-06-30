@@ -81,3 +81,4 @@ html_docs/*
 gen/
 gen/*
 
+install/mvBlueFOX*.tgz

@@ -127,7 +127,20 @@ if [ "$SCRIPTSOURCEDIR" != "$PWD" ]; then
    if [ "$SCRIPTSOURCEDIR" == "" ] || [ "$SCRIPTSOURCEDIR" == "." ]; then
       SCRIPTSOURCEDIR="$PWD"
    fi
-   cd "$SCRIPTSOURCEDIR"
+   cd "$SCRIPTSOURCEDIR/../binaries"
+fi
+
+### download
+
+wget http://mrs.felk.cvut.cz/data/uav/mvBlueFOX-x86_64_ABI2-2.21.0.tgz
+if [ $? -eq 0 ]; then
+  echo "#####################"
+  echo "### DONE UPDATING ###"
+  echo "#####################"
+else
+  echo "#######################################"
+  echo "### !!! CANNOT GET BLUEFOX_SDK !!!! ###"
+  echo "#######################################"
 fi
 
 # Set variables for GenICam and mvIMPACT_acquire for later use
@@ -152,6 +165,7 @@ if [ "$( ls | grep -c 'mvBlueFOX.*\.tgz' )" != "0" ] ; then
   ACT=$API-$TARGET-$VERSION
   ACT2=$ACT
 fi
+
 
 # Check if tar-file is correct for the system architecture
 if [ "$TARGET" == "x86_64"  ]; then
