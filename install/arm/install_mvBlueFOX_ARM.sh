@@ -3,9 +3,9 @@
 #This Script is made for custom ARM versions only!!!
 TARGET=undefined
 TARGET_UNCAPITALIZED=undefined
-DEF_DIRECTORY=/opt/mvIMPACT_Acquire
+DEF_DIRECTORY=/opt/mvIMPACT_acquire
 PRODUCT=mvBlueFOX
-API=mvIMPACT_Acquire
+API=mvIMPACT_acquire
 TARNAME=mvBlueFOX
 USE_DEFAULTS=NO
 APT_GET_EXTRA_PARAMS=
@@ -342,7 +342,7 @@ ACT=$API-$VERSION.tar
 
 # Now unpack the tar-file into /tmp
 cd /tmp
-rm -rf mvIMPACT_Acquire-ARM*
+rm -rf mvIMPACT_acquire-ARM*
 tar xfz "$SCRIPTSOURCEDIR/$TARFILE"
 
 # Now check if we can unpack the tar file with the device independent stuff
