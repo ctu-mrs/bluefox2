@@ -16,7 +16,7 @@ git clone https://github.com/KumarRobotics/camera_base.git
 
 cd $MY_WORKSPACE
 catkin init
-catkin config --extend /opt/ros/kinetic
+catkin config --extend /opt/ros/melodic
 catkin config --profile default --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 catkin config --profile release --cmake-args -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 catkin profile set default
