@@ -1,15 +1,34 @@
 #!/bin/bash
-
-#This Script is made for custom ARM versions only!!!
 TARGET=undefined
 TARGET_UNCAPITALIZED=undefined
-DEF_DIRECTORY=/opt/mvIMPACT_acquire
+DEF_DIRECTORY=/opt/mvIMPACT_Acquire
+DEF_DATA_DIRECTORY=${MVIMPACT_ACQUIRE_DATA_DIR:-/opt/mvIMPACT_Acquire/data}
 PRODUCT=mvBlueFOX
-API=mvIMPACT_acquire
+API=mvIMPACT_Acquire
 TARNAME=mvBlueFOX
 USE_DEFAULTS=NO
+UNATTENDED_INSTALLATION=NO
+MINIMAL_INSTALLATION=NO
 APT_GET_EXTRA_PARAMS=
 ARM_ARCHITECTURE="$(uname -m)"
+
+# Define the users real name if possible, to prevent accidental mvIA root ownership if script is invoked with sudo
+if [ "$(which logname)" == "" ] ; then
+    USER=$(whoami)
+else
+    if [ "$(logname 2>&1 | grep -c logname:)" == "1" ] ; then
+        USER=$(whoami)
+    else
+        USER=$(logname)
+    fi
+fi
+
+# If user is root, then sudo shouldn't be used
+if [ "$USER" == "root" ] ; then
+        SUDO=
+else
+        SUDO=$(which sudo)
+fi
 
 function createSoftlink {
     if [ ! -e "$1/$2" ]; then
@@ -22,7 +41,7 @@ function createSoftlink {
     if ! [ -L "$1/$3" ]; then
         ln -fs $2 "$1/$3" >/dev/null 2>&1
         if ! [ -L "$1/$3" ]; then
-            sudo ln -fs $2 "$1/$3" >/dev/null 2>&1
+            $SUDO ln -fs $2 "$1/$3" >/dev/null 2>&1
             if ! [ -L "$1/$3" ]; then
                 echo "Error: Could not create softlink $1/$3, even with sudo!"
                 exit 1
@@ -30,17 +49,6 @@ function createSoftlink {
         fi
     fi
 }
-
-# Define the users real name if possible, to prevent accidental mvIA root ownership if script is invoked with sudo
-if [ "$(which logname)" == "" ] ; then
-    USER=$(whoami)
-else
-    if [ "$(logname 2>&1 | grep -c logname:)" == "1" ] ; then
-        USER=$(whoami)
-    else
-        USER=$(logname)
-    fi
-fi
 
 # Print out ASCII-Art Logo.
 clear;
@@ -78,7 +86,25 @@ while [[ $# -gt 0 ]] ; do
     SHOW_HELP=YES
     break
   elif [[ ( "$1" == "-u" || "$1" == "--unattended" ) && "$PATH_EXPECTED" == "NO" ]] ; then
-    USE_DEFAULTS=YES
+    if [ "$MINIMAL_INSTALLATION" == "YES" ] ; then
+      echo
+      echo "WARNING: Unattended installation and minimal installation are mutually exclusive!"
+      echo
+      SHOW_HELP=YES
+      break
+    else
+      UNATTENDED_INSTALLATION=YES
+    fi
+  elif [[ ( "$1" == "-m" || "$1" == "--minimal" ) && "$PATH_EXPECTED" == "NO" ]] ; then
+    if [ "$UNATTENDED_INSTALLATION" == "YES" ] ; then
+      echo
+      echo "WARNING: Minimal installation and unattended installation are mutually exclusive!"
+      echo
+      SHOW_HELP=YES
+      break
+    else
+      MINIMAL_INSTALLATION=YES
+    fi
   elif [[ ( "$1" == "-p" || "$1" == "--path" ) && "$PATH_EXPECTED" == "NO" ]] ; then
     if [ "$2" == "" ] ; then
       echo
@@ -98,6 +124,7 @@ while [[ $# -gt 0 ]] ; do
   fi
   shift
 done
+
 if [ "$SHOW_HELP" == "YES" ] ; then
   echo
   echo 'Installation script for the '$PRODUCT' driver.'
@@ -110,17 +137,29 @@ if [ "$SHOW_HELP" == "YES" ] ; then
   echo "-h --help                  Display this help."
   echo "-p --path                  Set the directory where the files shall be installed."
   echo "-u --unattended            Unattended installation with default settings. By using"
-  echo "                           this parameter you explicitly accept the EULA"
+  echo "                           this parameter you explicitly accept the EULA."
+  echo "-m --minimal               Minimal installation. No tools or samples will be built, and"
+  echo "                           no automatic configuration and/or optimizations will be done."
+  echo "                           By using this parameter you explicitly accept the EULA."
   echo
   exit 1
 fi
-if [ "$USE_DEFAULTS" == "YES" ] ; then
+
+if [ "$UNATTENDED_INSTALLATION" == "YES" ] ; then
   echo
   echo "Unattended installation requested, no user interaction will be required and the"
   echo "default settings will be used."
   echo
+  USE_DEFAULTS=YES
 fi
 
+if [ "$MINIMAL_INSTALLATION" == "YES" ] ; then
+  echo
+  echo "Minimal installation requested, no user interaction will be required, no tools or samples"
+  echo "will be built and no automatic configurations or optimizations will be done."
+  echo
+  USE_DEFAULTS=YES
+fi
 # Get the source directory (the directory where the files for the installation are) and cd to it
 # (The script file must be in the same directory as the source TGZ) !!!
 if which dirname >/dev/null; then
@@ -174,7 +213,7 @@ fi
 
 YES_NO=""
 # Ask whether to use the defaults or proceed with an interactive installation
-if [ "$USE_DEFAULTS" == "NO" ] ; then
+if [ "$UNATTENDED_INSTALLATION" == "NO" ] && [ "$MINIMAL_INSTALLATION" == "NO" ] ; then
   echo
   echo "Would you like this installation to run in unattended mode?"
   echo "Using this mode you explicitly agree to the EULA(End User License Agreement)!"
@@ -199,6 +238,7 @@ echo "--------------------------------------------------------------------------
 echo
 echo "Installation for user:            "$USER
 echo "Installation directory:           "$DEF_DIRECTORY
+echo "Data directory:                   "$DEF_DATA_DIRECTORY
 echo "Source directory:                 "$(echo $SCRIPTSOURCEDIR | sed -e 's/\/\.//')
 echo "Version:                          "$VERSION
 echo "Platform:                         "$TARGET
@@ -266,8 +306,9 @@ echo
 
 # First of all ask whether to dispose of the old mvIMPACT Acquire installation
 if [ "$MVIMPACT_ACQUIRE_DIR" != "" ]; then
-  echo "Do you want to keep previous installation (default is 'yes')?"
-  echo "If you select no, mvIMPACT Acquire will be removed for ALL installed Products!"
+  echo "Existing installation detected at: $MVIMPACT_ACQUIRE_DIR"
+  echo "Do you want to keep this installation (default is 'yes')?"
+  echo "If you select no, mvIMPACT Acquire will be removed for ALL installed products!"
   echo "Hit 'n' + <Enter> for 'no', or just <Enter> for 'yes'."
   if [ "$USE_DEFAULTS" == "NO" ] ; then
     read YES_NO
@@ -276,15 +317,20 @@ if [ "$MVIMPACT_ACQUIRE_DIR" != "" ]; then
   fi
   echo
   if [ "$YES_NO" == "n" ] || [ "$YES_NO" == "N" ]; then
-    sudo rm -f /usr/bin/mvDeviceConfigure >/dev/null 2>&1
-    sudo rm -f /usr/bin/mvIPConfigure >/dev/null 2>&1
-    sudo rm -f /usr/bin/wxPropView >/dev/null 2>&1
-    sudo rm -f /etc/ld.so.conf.d/acquire.conf 2>&1
-    sudo rm -f /etc/ld.so.conf.d/genicam.conf 2>&1
-    sudo rm -f /etc/profile.d/acquire.sh 2>&1
-    sudo rm -f /etc/profile.d/genicam.sh 2>&1
-    sudo rm -rf /etc/matrix-vision >/dev/null 2>&1
-    sudo rm -rf $MVIMPACT_ACQUIRE_DIR >/dev/null 2>&1
+    $SUDO rm -f /usr/bin/mvDeviceConfigure >/dev/null 2>&1
+    $SUDO rm -f /usr/bin/mvIPConfigure >/dev/null 2>&1
+    $SUDO rm -f /usr/bin/wxPropView >/dev/null 2>&1
+    $SUDO rm -f /etc/ld.so.conf.d/acquire.conf >/dev/null 2>&1
+    $SUDO rm -f /etc/ld.so.conf.d/genicam.conf >/dev/null 2>&1
+    $SUDO rm -f /etc/profile.d/acquire.sh >/dev/null 2>&1
+    $SUDO rm -f /etc/profile.d/genicam.sh >/dev/null 2>&1
+    $SUDO rm -f /etc/udev/rules.d/51-mvbf.rules >/dev/null 2>&1
+    $SUDO rm -f /etc/udev/rules.d/52-U3V.rules >/dev/null 2>&1
+    $SUDO rm -f /etc/udev/rules.d/52-mvbf3.rules >/dev/null 2>&1
+    $SUDO rm -f /etc/sysctl.d/62-buffers-performance.conf >/dev/null 2>&1
+    $SUDO rm -f /etc/security/limits.d/acquire.conf >/dev/null 2>&1
+    $SUDO rm -rf /etc/matrix-vision >/dev/null >/dev/null 2>&1
+    $SUDO rm -rf $MVIMPACT_ACQUIRE_DIR >/dev/null 2>&1
     if [ $? == 0 ]; then
       echo "Previous mvIMPACT Acquire Installation ($MVIMPACT_ACQUIRE_DIR) removed successfully!"
     else
@@ -298,12 +344,12 @@ fi
 
 # Create the *.conf files if the system is supporting ld.so.conf.d
 if grep -q '/etc/ld.so.conf.d/' /etc/ld.so.conf; then
-  sudo rm -f $ACQUIRE_LDSOCONF_FILE; sudo touch $ACQUIRE_LDSOCONF_FILE
+  $SUDO rm -f $ACQUIRE_LDSOCONF_FILE; $SUDO touch $ACQUIRE_LDSOCONF_FILE
 fi
 
 # Create the export files if the system is supporting profile.d
 if grep -q '/etc/profile.d/' /etc/profile; then
-  sudo rm -f $ACQUIRE_EXPORT_FILE; sudo touch $ACQUIRE_EXPORT_FILE
+  $SUDO rm -f $ACQUIRE_EXPORT_FILE; $SUDO touch $ACQUIRE_EXPORT_FILE
 fi
 
 # Check if the destination directory exist, else create it
@@ -314,7 +360,7 @@ if ! [ -d $DEF_DIRECTORY ]; then
   if ! [ -d $DEF_DIRECTORY ]; then
     # that didn't work
     # now try it as superuser
-    sudo mkdir -p $DEF_DIRECTORY
+    $SUDO mkdir -p $DEF_DIRECTORY
   fi
   if ! [ -d $DEF_DIRECTORY  ]; then
     echo 'ERROR: Could not create target directory' $DEF_DIRECTORY '.'
@@ -328,7 +374,7 @@ else
 fi
 
 # in case the directory already existed BUT it belongs to other user
-sudo chown -R $USER:$USER $DEF_DIRECTORY
+$SUDO chown -R $USER: $DEF_DIRECTORY
 
 # Check the actual tarfile
 if ! [ -r $TARFILE ]; then
@@ -342,7 +388,7 @@ ACT=$API-$VERSION.tar
 
 # Now unpack the tar-file into /tmp
 cd /tmp
-rm -rf mvIMPACT_acquire-ARM*
+rm -rf mvIMPACT_Acquire-ARM*
 tar xfz "$SCRIPTSOURCEDIR/$TARFILE"
 
 # Now check if we can unpack the tar file with the device independent stuff
@@ -362,33 +408,28 @@ cd $DEF_DIRECTORY
 if grep -q 'MVIMPACT_ACQUIRE_DIR=' $ACQUIRE_EXPORT_FILE; then
    echo 'MVIMPACT_ACQUIRE_DIR already defined in' $ACQUIRE_EXPORT_FILE.
 else
-   sudo sh -c "echo 'export MVIMPACT_ACQUIRE_DIR=$DEF_DIRECTORY' >> $ACQUIRE_EXPORT_FILE"
+   $SUDO sh -c "echo 'export MVIMPACT_ACQUIRE_DIR=$DEF_DIRECTORY' >> $ACQUIRE_EXPORT_FILE"
 fi
 
 if grep -q "$DEF_DIRECTORY/lib/$TARGET_UNCAPITALIZED" $ACQUIRE_LDSOCONF_FILE; then
    echo "$DEF_DIRECTORY/lib/$TARGET_UNCAPITALIZED already defined in" $ACQUIRE_LDSOCONF_FILE.
 else
-   sudo sh -c "echo '$DEF_DIRECTORY/lib/$TARGET_UNCAPITALIZED' >> $ACQUIRE_LDSOCONF_FILE"
+   $SUDO sh -c "echo '$DEF_DIRECTORY/lib/$TARGET_UNCAPITALIZED' >> $ACQUIRE_LDSOCONF_FILE"
 fi
 if grep -q "$DEF_DIRECTORY/Toolkits/expat/bin/$TARGET_UNCAPITALIZED/lib" $ACQUIRE_LDSOCONF_FILE; then
    echo "$DEF_DIRECTORY/Toolkits/expat/bin/$TARGET_UNCAPITALIZED/lib already defined in" $ACQUIRE_LDSOCONF_FILE.
 else
-   sudo sh -c "echo '$DEF_DIRECTORY/Toolkits/expat/bin/$TARGET_UNCAPITALIZED/lib' >> $ACQUIRE_LDSOCONF_FILE"
+   $SUDO sh -c "echo '$DEF_DIRECTORY/Toolkits/expat/bin/$TARGET_UNCAPITALIZED/lib' >> $ACQUIRE_LDSOCONF_FILE"
 fi
 
 # This variable must be exported, or else wxPropView-related make problems can arise
 export MVIMPACT_ACQUIRE_DIR=$DEF_DIRECTORY
 
 # Update the library cache with ldconfig
-sudo /sbin/ldconfig
+$SUDO /sbin/ldconfig
 
 # Clean up /tmp
 rm -rf /tmp/$ACT2 /tmp/$API-$VERSION
-
-# apt-get extra parameters
-if [ "$USE_DEFAULTS" == "YES" ] ; then
-  APT_GET_EXTRA_PARAMS=" -y --force-yes"
-fi
 
 #create softlinks for the Toolkits libraries
 createSoftlink $DEF_DIRECTORY/Toolkits/expat/bin/$TARGET_UNCAPITALIZED/lib $(ls $DEF_DIRECTORY/Toolkits/expat/bin/$TARGET_UNCAPITALIZED/lib | grep libexpat\.so\..*\..*\. ) libexpat.so.1
@@ -411,133 +452,167 @@ else
     ARM_ARCHITECTURE=$TARGET_UNCAPITALIZED
 fi
 
-# Set up the fresh libs with ldconfig
-sudo /sbin/ldconfig
+# Update the library cache with ldconfig
+$SUDO /sbin/ldconfig
 
-# Ask whether the samples should be built natively
-echo
-echo "Do you want the sample applications to be built (default is 'yes')?"
-echo "A native g++ compiler has to be present on the system!"
-echo "Hit 'n' + <Enter> for 'no', or just <Enter> for 'yes'."
-if [ "$USE_DEFAULTS" == "NO" ] ; then
-  read YES_NO
-else
-  YES_NO=""
-fi
-echo
-if [ "$YES_NO" == "n" ] || [ "$YES_NO" == "N" ]; then
-  echo 'The tools and samples were not built.'
-  echo 'To build them yourself, type:'
-  echo '  cd '$DEF_DIRECTORY
-  echo '  make native'
-  echo '  sudo /sbin/ldconfig'
-else
-  if [ "$(which g++)" != "" ]; then
-    echo "Do you want the GUI tools to be built (default is 'yes')?"
-    echo "This requires wxWidgets libraries to be present on your system."
-    echo "If they are missing, an attempt will be made to download them."
-    echo "Hit 'n' + <Enter> for 'no', or just <Enter> for 'yes'."
-    if [ "$USE_DEFAULTS" == "NO" ] ; then
-      read YES_NO
-    else
-      YES_NO=""
-    fi
-    echo
-    if [ "$YES_NO" == "n" ] || [ "$YES_NO" == "N" ]; then
-      # remove GUI apps sources since they are not needed
-      rm -rf $DEF_DIRECTORY/apps/mv*
-      rm -rf $DEF_DIRECTORY/apps/Common/FirmwareUpdate_mvHYPERION
-    else
-      # check if wxwidgets are present else download them
-      if [ "$(wx-config --release 2>&1 | grep -c "^3.")" != "1" ]; then
-        if [ "x$(which apt-get)" != "x" ]; then
-          echo
-          echo "Updating file lists from repositories..."
-          echo
-          sudo apt-get update
-          echo
-          echo "Downloading and installing wxWidgets via apt-get..."
-          echo
-          sudo apt-get $APT_GET_EXTRA_PARAMS -q install libwxgtk3.0-dev libwxbase3.0-0* libwxbase3.0-dev libwxgtk3.0-0* wx3.0-headers build-essential libgtk2.0-dev
-          echo
-          if [ $? == 0 ] && [ "x$(which wx-config)" != "x" ]; then
-            echo "Necessary wxWidgets libraries installed successfully!"
+if [ "$MINIMAL_INSTALLATION" == "NO" ] ; then
+  # apt-get extra parameters
+  if [ "$USE_DEFAULTS" == "YES" ] ; then
+    APT_GET_EXTRA_PARAMS=" -y --force-yes"
+  fi
+  
+  
+  # Ask whether the samples should be built natively
+  echo
+  echo "Do you want the sample applications to be built (default is 'yes')?"
+  echo "A native g++ compiler has to be present on the system!"
+  echo "Hit 'n' + <Enter> for 'no', or just <Enter> for 'yes'."
+  if [ "$USE_DEFAULTS" == "NO" ] ; then
+    read YES_NO
+  else
+    YES_NO=""
+  fi
+  echo
+  if [ "$YES_NO" == "n" ] || [ "$YES_NO" == "N" ]; then
+    echo 'The tools and samples were not built.'
+    echo 'To build them yourself, type:'
+    echo '  cd '$DEF_DIRECTORY
+    echo '  make native'
+    echo '  sudo /sbin/ldconfig'
+  else
+    if [ "$(which g++)" != "" ]; then
+      echo "Do you want the GUI tools to be built (default is 'yes')?"
+      echo "This requires wxWidgets libraries to be present on your system."
+      echo "If they are missing, an attempt will be made to download them."
+      echo "Hit 'n' + <Enter> for 'no', or just <Enter> for 'yes'."
+      if [ "$USE_DEFAULTS" == "NO" ] ; then
+        read YES_NO
+      else
+        YES_NO=""
+      fi
+      echo
+      if [ "$YES_NO" == "n" ] || [ "$YES_NO" == "N" ]; then
+        # remove GUI apps sources since they are not needed
+        rm -rf $DEF_DIRECTORY/apps/mv*
+        rm -rf $DEF_DIRECTORY/apps/Common/FirmwareUpdate_mvHYPERION
+      else
+        # check if wxwidgets are present else download them
+        if [ "$(wx-config --release 2>&1 | grep -c "^3.")" != "1" ]; then
+          if [ "x$(which apt-get)" != "x" ]; then
             echo
+            echo "Updating file lists from repositories..."
+            echo
+            $SUDO apt-get update
+            echo
+            echo "Downloading and installing wxWidgets via apt-get..."
+            echo
+            $SUDO apt-get $APT_GET_EXTRA_PARAMS -q install libwxgtk3.0-dev libwxbase3.0-0* libwxbase3.0-dev libwxgtk3.0-0* wx3.0-headers build-essential libgtk2.0-dev
+            echo
+            if [ $? == 0 ] && [ "x$(which wx-config)" != "x" ]; then
+              echo "Necessary wxWidgets libraries installed successfully!"
+              echo
+            else
+              echo "wxWidgets libraries could not automatically download and install on this system!"
+              echo "Please either install wxWidgets libraries manually and re-run this installer script,"
+              echo "or re-run this script and choose not to build the wxWidgets GUI Tools altogether!"
+              echo
+              exit 1
+            fi
           else
+            echo
+            echo "Could not download wxWidgets, apt-get is missing!"
+            echo
             echo "wxWidgets libraries could not automatically download and install on this system!"
             echo "Please either install wxWidgets libraries manually and re-run this installer script,"
             echo "or re-run this script and choose not to build the wxWidgets GUI Tools altogether!"
             echo
             exit 1
           fi
-        else
-          echo
-          echo "Could not download wxWidgets, apt-get is missing!"
-          echo
-          echo "wxWidgets libraries could not automatically download and install on this system!"
-          echo "Please either install wxWidgets libraries manually and re-run this installer script,"
-          echo "or re-run this script and choose not to build the wxWidgets GUI Tools altogether!"
-          echo
-          exit 1
+        fi
+        cd $DEF_DIRECTORY
+        $SUDO /sbin/ldconfig
+      fi
+      # build all apps and samples.
+      echo "Building samples and/or tools..."
+      make native
+
+      # Shall the MV tools be linked in /usr/bin?
+      echo "Do you want to set a link to /usr/bin for wxPropView and mvDeviceConfigure (default is 'yes')?"
+      echo "Hit 'n' + <Enter> for 'no', or just <Enter> for 'yes'."
+      if [ "$USE_DEFAULTS" == "NO" ] ; then
+        read YES_NO
+      else
+        YES_NO=""
+      fi
+      if [ "$YES_NO" == "n" ] || [ "$YES_NO" == "N" ]; then
+        echo "Will not set any new link to /usr/bin."
+      else
+        if [ -r /usr/bin ]; then
+          # Set wxPropView
+          if [ -r $DEF_DIRECTORY/apps/mvPropView/$ARM_ARCHITECTURE/wxPropView ]; then
+            $SUDO rm -f /usr/bin/wxPropView
+            $SUDO ln -s $DEF_DIRECTORY/apps/mvPropView/$ARM_ARCHITECTURE/wxPropView /usr/bin/wxPropView
+          fi
+          # Set mvDeviceConfigure
+          if [ -r $DEF_DIRECTORY/apps/mvDeviceConfigure/$ARM_ARCHITECTURE/mvDeviceConfigure ]; then
+            $SUDO rm -f /usr/bin/mvDeviceConfigure
+            $SUDO ln -s $DEF_DIRECTORY/apps/mvDeviceConfigure/$ARM_ARCHITECTURE/mvDeviceConfigure /usr/bin/mvDeviceConfigure
+          fi
         fi
       fi
-      cd $DEF_DIRECTORY
-      sudo /sbin/ldconfig
-    fi
-    # build all apps and samples.
-    echo "Building samples and/or tools..."
-    make native
-  else
-    echo "Sample applications and/or GUI tools cannot be built, as the system is missing a g++ compiler!"
-  fi
 
-# Shall the MV tools be linked in /usr/bin?
-   echo "Do you want to set a link to /usr/bin for wxPropView and mvDeviceConfigure (default is 'yes')?"
-   echo "Hit 'n' + <Enter> for 'no', or just <Enter> for 'yes'."
-   if [ "$USE_DEFAULTS" == "NO" ] ; then
-     read YES_NO
-   else
-     YES_NO=""
-   fi
-   if [ "$YES_NO" == "n" ] || [ "$YES_NO" == "N" ]; then
-      echo "Will not set any new link to /usr/bin."
-   else
-      if [ -r /usr/bin ]; then
-         # Set wxPropView
-         if [ -r $DEF_DIRECTORY/apps/mvPropView/$ARM_ARCHITECTURE/wxPropView ]; then
-            sudo rm -f /usr/bin/wxPropView
-            sudo ln -s $DEF_DIRECTORY/apps/mvPropView/$ARM_ARCHITECTURE/wxPropView /usr/bin/wxPropView
-         fi
-         # Set mvDeviceConfigure
-         if [ -r $DEF_DIRECTORY/apps/mvDeviceConfigure/$ARM_ARCHITECTURE/mvDeviceConfigure ]; then
-            sudo rm -f /usr/bin/mvDeviceConfigure
-            sudo ln -s $DEF_DIRECTORY/apps/mvDeviceConfigure/$ARM_ARCHITECTURE/mvDeviceConfigure /usr/bin/mvDeviceConfigure
-         fi
+      # Should wxPropView check weekly for updates?
+      echo "Do you want wxPropView to check for updates weekly(default is 'yes')?"
+      echo "Hit 'n' + <Enter> for 'no', or just <Enter> for 'yes'."
+      if [ "$USE_DEFAULTS" == "NO" ] ; then
+        read YES_NO
+      else
+        YES_NO=""
       fi
-   fi
+      if [ "$YES_NO" == "n" ] || [ "$YES_NO" == "N" ]; then
+        if [ "$(grep -c AutoCheckForUpdatesWeekly ~/.wxPropView)" -ne "0" ]; then
+          Tweakline=$(( $( grep -n "AutoCheckForUpdatesWeekly" ~/.wxPropView | cut -d: -f1) )) && sed -i "$Tweakline s/.*/AutoCheckForUpdatesWeekly=0/" ~/.wxPropView
+        else
+          echo "AutoCheckForUpdatesWeekly=0" >> ~/.wxPropView
+        fi
+      else
+        if [ "$(grep -c AutoCheckForUpdatesWeekly ~/.wxPropView)" -ne "0" ]; then
+          Tweakline=$(( $( grep -n "AutoCheckForUpdatesWeekly" ~/.wxPropView | cut -d: -f1) )) && sed -i "$Tweakline s/.*/AutoCheckForUpdatesWeekly=1/" ~/.wxPropView
+        else
+          echo "[MainFrame/Help]" >> ~/.wxPropView
+          echo "AutoCheckForUpdatesWeekly=1" >> ~/.wxPropView
+        fi
+      fi
+    else
+      echo "Sample applications and/or GUI tools cannot be built, as the system is missing a g++ compiler!"
+    fi
+  fi
 fi
+
+# Update the library cache again.
+$SUDO /sbin/ldconfig
 
 # create the logs directory and set MVIMPACT_ACQUIRE_DATA_DIR.
-if ! [ -d /etc/matrix-vision/mvimpact-acquire/logs ]; then
-  mkdir -p /etc/matrix-vision/mvimpact-acquire/logs >/dev/null 2>&1
-  if ! [ -d /etc/matrix-vision/mvimpact-acquire/logs ]; then
+if ! [ -d $DEF_DATA_DIRECTORY/logs ]; then
+  mkdir -p $DEF_DATA_DIRECTORY/logs >/dev/null 2>&1
+  if ! [ -d $DEF_DATA_DIRECTORY/logs ]; then
       # that didn't work, now try it as superuser
-      sudo mkdir -p /etc/matrix-vision/mvimpact-acquire/logs >/dev/null 2>&1
+      $SUDO mkdir -p $DEF_DATA_DIRECTORY/logs >/dev/null 2>&1
   fi
 fi
 
-if [ -d /etc/matrix-vision/mvimpact-acquire/logs ]; then
-  mv $DEF_DIRECTORY/apps/mvDebugFlags.mvd /etc/matrix-vision/mvimpact-acquire/logs >/dev/null 2>&1
-  if ! [ -r /etc/matrix-vision/mvimpact-acquire/logs/mvDebugFlags.mvd ]; then
-    sudo mv $DEF_DIRECTORY/apps/mvDebugFlags.mvd /etc/matrix-vision/mvimpact-acquire/logs >/dev/null 2>&1
+if [ -d $DEF_DATA_DIRECTORY/logs ]; then
+  mv $DEF_DIRECTORY/apps/mvDebugFlags.mvd $DEF_DATA_DIRECTORY/logs >/dev/null 2>&1
+  if ! [ -r $DEF_DATA_DIRECTORY/logs/mvDebugFlags.mvd ]; then
+    $SUDO mv $DEF_DIRECTORY/apps/mvDebugFlags.mvd $DEF_DATA_DIRECTORY/logs >/dev/null 2>&1
   fi
   if grep -q 'MVIMPACT_ACQUIRE_DATA_DIR=' $ACQUIRE_EXPORT_FILE; then
     echo 'MVIMPACT_ACQUIRE_DATA_DIR already defined in' $ACQUIRE_EXPORT_FILE.
   else
-    sudo sh -c "echo 'export MVIMPACT_ACQUIRE_DATA_DIR=/etc/matrix-vision/mvimpact-acquire' >> $ACQUIRE_EXPORT_FILE"
+    $SUDO sh -c "echo 'export MVIMPACT_ACQUIRE_DATA_DIR=$DEF_DATA_DIRECTORY' >> $ACQUIRE_EXPORT_FILE"
   fi
 else
-  echo 'ERROR: Could not create "/etc/matrix-vision/mvimpact-acquire/logs" directory.'
+  echo "ERROR: Could not create " $DEF_DATA_DIRECTORY/logs " directory."
   echo 'Problem:'$?
   echo 'Maybe you specified a partition that was mounted read only?'
   echo
@@ -559,34 +634,69 @@ if [ "$YES_NO" == "n" ] || [ "$YES_NO" == "N" ]; then
    echo 'copy 51-mvbf.rules the file to /etc/udev/rules.d'
    echo
 else
-   sudo cp -f $DEF_DIRECTORY/Scripts/51-mvbf.rules /etc/udev/rules.d
+   $SUDO cp -f $DEF_DIRECTORY/Scripts/51-mvbf.rules /etc/udev/rules.d
 fi
 
 # check if plugdev group exists and the user is member of it
-echo
-if [ "$(grep -c plugdev /etc/group)" == "0" ]; then
-   echo "Group 'plugdev' don't exists, this is necessary to run as non-root user, do you want to create it"
-   echo "and add users to 'plugdev' (default is 'yes')?"
-   echo "Hit 'n' + <Enter> for 'no', or just <Enter> for 'yes'."
-   if [ "$USE_DEFAULTS" == "NO" ] ; then
-     read YES_NO
-   else
-     YES_NO=""
-   fi
-   if [ "$YES_NO" == "n" ] || [ "$YES_NO" == "N" ]; then
-      echo
-      echo "'plugdev' will be not created and you can't run the device as non-root user!"
-      echo "If you want non-root users support, you will need to create 'plugdev'"
-      echo "and add the users to this group."
-   else
-      sudo /usr/sbin/groupadd -g 46 plugdev
-      sudo /usr/sbin/usermod -a $USER -G plugdev
-      echo "Group 'plugdev' created and user '"$USER"' added to it."
-   fi
+if [ "$(grep -c ^plugdev: /etc/group )" == "0" ]; then
+  echo "Group 'plugdev' doesn't exist, this is necessary to use USB devices as a normal user,"
+  echo "do you want to create it and add current user to 'plugdev' (default is 'yes')?"
+  echo "Hit 'n' + <Enter> for 'no', or just <Enter> for 'yes'."
+  if [ "$USE_DEFAULTS" == "NO" ] ; then
+    read YES_NO
+  else
+    YES_NO=""
+  fi
+  if [ "$YES_NO" == "n" ] || [ "$YES_NO" == "N" ]; then
+    echo
+    echo "'plugdev' will be not created and you can't run the device as non-root user!"
+    echo "If you want non-root users support, you will need to create 'plugdev'"
+    echo "and add the users to this group."
+ else
+    $SUDO /usr/sbin/groupadd -g 46 plugdev
+    $SUDO /usr/sbin/usermod -a -G plugdev $USER
+    echo "Group 'plugdev' created and user '"$USER"' added to it."
+  fi
 else
-   if [ "$(groups | grep plugdev -c)" == "0" ]; then
-   sudo /usr/sbin/usermod -a $USER -G plugdev
-   fi
+  if [ "$( groups | grep -c plugdev )" == "0" ]; then
+    echo "Group 'plugdev' exists, however user '"$USER"' is not a member, which is necessary to"
+    echo "use USB devices. Do you want to add  user '"$USER"' to 'plugdev' (default is 'yes')?"
+    echo "Hit 'n' + <Enter> for 'no', or just <Enter> for 'yes'."
+    if [ "$USE_DEFAULTS" == "NO" ] ; then
+      read YES_NO
+    else
+      YES_NO=""
+    fi
+    if [ "$YES_NO" == "n" ] || [ "$YES_NO" == "N" ]; then
+      echo
+      echo "If you want to use USB devices you have to manually add user '"$USER"' to the plugdev group."
+    else
+      $SUDO /usr/sbin/usermod -a -G plugdev $USER
+      echo "User '"$USER"' added to 'plugdev' group."
+    fi
+  fi
+fi
+
+# make sure the complete mvIA-tree and the data folder belongs to the user
+$SUDO chown -R $USER: $DEF_DIRECTORY
+$SUDO chown -R $USER: $DEF_DATA_DIRECTORY
+
+# Configure the /etc/security/limits.d/acquire.conf file to be able to set thread priorities
+if [ -d /etc/security/limits.d ]; then
+  if [[ ! -f /etc/security/limits.d/acquire.conf || "$(grep -c '@plugdev            -       nice            -20' /etc/security/limits.d/acquire.conf )" == "0" ]] ; then
+    echo '@plugdev            -       nice            -20' | sudo tee -a /etc/security/limits.d/acquire.conf >/dev/null
+  fi
+  if [ "$(grep -c '@plugdev            -       rtprio          99' /etc/security/limits.d/acquire.conf )" == "0" ] ; then
+    echo '@plugdev            -       rtprio          99' | sudo tee -a /etc/security/limits.d/acquire.conf >/dev/null
+  fi
+else
+  echo 'INFO: Directory /etc/security/limits.d is missing, mvIMPACT Acquire will not'
+  echo 'be able to set thread priorities correctly. Incomplete frames may occur!!!'
+fi
+
+# remove all example application sources in case of minimal installation 
+if [ "$MINIMAL_INSTALLATION" == "YES" ] ; then
+  $SUDO rm -rf $DEF_DIRECTORY/apps >/dev/null 2>&1
 fi
 
 echo
@@ -604,5 +714,5 @@ fi
 if [ "$YES_NO" == "n" ] || [ "$YES_NO" == "N" ]; then
    echo "You need to reboot manually to complete the installation."
 else
-   sudo shutdown -r now
+   $SUDO shutdown -r now
 fi
