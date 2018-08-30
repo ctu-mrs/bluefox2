@@ -1,7 +1,7 @@
 <launch>
     <!-- Common Interface -->
     <arg name="device"/>
-    <arg name="rate" default="20"/>
+    <arg name="rate" default="60"/>
 
     <!-- Camera Settings -->
     <arg name="serial" default="$(arg device)"/>

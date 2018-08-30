@@ -5,7 +5,12 @@ namespace bluefox2 {
 
 SingleNode::SingleNode(const ros::NodeHandle& pnh)
     : CameraNodeBase(pnh),
-      bluefox2_ros_(boost::make_shared<Bluefox2Ros>(pnh)) {}
+      bluefox2_ros_(boost::make_shared<Bluefox2Ros>(pnh)),
+      nh(pnh)    
+      {
+        sub_expose_us = nh.subscribe("expose_us", 1, &bluefox2::SingleNode::callbackAec, this);
+        sub_gain_db = nh.subscribe("gain_db", 1, &bluefox2::SingleNode::callbackAgc, this);
+      }
 
 void SingleNode::Acquire() {
   while (is_acquire() && ros::ok()) {
@@ -37,6 +42,11 @@ void SingleNode::Setup(Bluefox2DynConfig& config) {
 void SingleNode::callbackAec(const std_msgs::Int32::ConstPtr &expose_us) {
     int exp_us = int(expose_us->data);
     bluefox2_ros_->camera().callbackAec(exp_us);
+}
+
+void SingleNode::callbackAgc(const std_msgs::Float32::ConstPtr &gain_db) {
+    double gain = double(gain_db->data);
+    bluefox2_ros_->camera().callbackAgc(gain);
 }
 
 }  // namepace bluefox2
