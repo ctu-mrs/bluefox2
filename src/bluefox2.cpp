@@ -122,6 +122,10 @@ void Bluefox2::callbackAec(int &expose_us){
     SetAec(autoexpose, expose_us);
 }
 
+void Bluefox2::callbackAgc(double &gain_db){
+    bool autogain = false;
+    SetAgc(autogain, gain_db);
+}
 
 void Bluefox2::Configure(Bluefox2DynConfig &config) {
   // Clear request queue

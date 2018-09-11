@@ -4,6 +4,7 @@
 #include "bluefox2/Bluefox2DynConfig.h"
 #include <camera_base/camera_node_base.h>
 #include <std_msgs/Int32.h>
+#include <std_msgs/Float32.h>
 
 namespace bluefox2 {
 
@@ -18,10 +19,14 @@ class SingleNode : public camera_base::CameraNodeBase<Bluefox2DynConfig> {
 
   void AcquireOnce();
   void callbackAec(const std_msgs::Int32::ConstPtr &expose_us);
+  void callbackAgc(const std_msgs::Float32::ConstPtr &gain_db);
 
  private:
   boost::shared_ptr<Bluefox2Ros> bluefox2_ros_;
   bool boost_{false};
+  ros::Subscriber sub_expose_us;
+  ros::Subscriber sub_gain_db;
+  ros::NodeHandle nh;
 };
 
 }  // namespace bluefox2
