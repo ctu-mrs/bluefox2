@@ -28,6 +28,7 @@
 
   <!-- Node Settings -->
   <arg name="plugin" default="false"/>
+  <arg name="manager" default="bluefox_manager"/>
   <arg name="output" default="screen"/>
   <arg name="proc" default="false"/>
   <arg name="view" default="false"/>
@@ -66,6 +67,13 @@
     <param name="gain_db" type="double" value="$(arg gain_db)"/>
     <param name="boost" type="bool" value="$(arg boost)"/>
     <param name="mm" type="int" value="$(arg mm)"/>
+
+    <!-- Params for theora quality, images being compressed into "stream" -->
+    <param name="image_raw/compressed/jpeg_quality" type="int" value="$(arg compressed_jpeg_quality)" />
+    <param name="image_raw/theora/keyframe_frequency" value="$(arg theora_keyframe_frequency)"  />
+    <param name="image_raw/theora/target_bitrate" value="$(arg theora_target_bitrate)"  />
+    <param name="image_raw/theora/quality" value="$(arg theora_quality)"  />
+    <param name="image_raw/theora/optimize_for" value="$(arg theora_optimize_for)"  />
   </node>
 
   <!--Proc-->
