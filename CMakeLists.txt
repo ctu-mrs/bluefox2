@@ -24,6 +24,7 @@ catkin_package(
     CATKIN_DEPENDS message_runtime
     )
 
+
 include_directories(
     include
     ${catkin_INCLUDE_DIRS}
@@ -39,4 +40,3 @@ add_dependencies(${PROJECT_NAME}
     ${PROJECT_NAME}_gencpp
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
     )
-

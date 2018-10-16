@@ -1,5 +1,6 @@
 #!/bin/bash
 DEF_DIRECTORY=/opt/mvIMPACT_acquire
+LIBUSB_DIRECTORY=/opt/mvIMPACT_acquire_libusb
 DEF_DATA_DIRECTORY=${MVIMPACT_ACQUIRE_DATA_DIR:-/opt/mvIMPACT_acquire/data}
 PRODUCT=mvBlueFOX
 API=mvIMPACT_acquire
@@ -262,6 +263,7 @@ echo "--------------------------------------------------------------------------
 echo
 echo "Installation for user:            "$USER
 echo "Installation directory:           "$DEF_DIRECTORY
+echo "Installation libusb directory:    "$LIBUSB_DIRECTORY
 echo "Data directory:                   "$DEF_DATA_DIRECTORY
 echo "Source directory:                 "$(echo $SCRIPTSOURCEDIR | sed -e 's/\/\.//')
 echo "Version:                          "$VERSION
@@ -395,8 +397,30 @@ else
   echo 'Installation directory already exists.'
 fi
 
+if ! [ -d $LIBUSB_DIRECTORY ]; then
+  # the destination directory does not yet exist
+  # first try to create it as a normal user
+  mkdir -p $LIBUSB_DIRECTORY >/dev/null 2>&1
+  if ! [ -d $LIBUSB_DIRECTORY ]; then
+    # that didn't work
+    # now try it as superuser
+    $SUDO mkdir -p $LIBUSB_DIRECTORY
+  fi
+  if ! [ -d $LIBUSB_DIRECTORY  ]; then
+    echo 'ERROR: Could not create target directory' $LIBUSB_DIRECTORY '.'
+    echo 'Problem:'$?
+    echo 'Maybe you specified a partition that was mounted read only?'
+    echo
+    exit
+  fi
+else
+  echo 'Installation directory already exists.'
+
+fi
+
 # in case the directory already existed BUT it belongs to other user
 $SUDO chown -R $USER: $DEF_DIRECTORY
+$SUDO chown -R $USER: $LIBUSB_DIRECTORY
 
 # Check the actual tar-file
 if ! [ -r $TARFILE ]; then
@@ -423,6 +447,9 @@ else
   echo "ERROR: Could not read: /tmp/"$ACT2
   exit
 fi
+
+# Move libusb to libusb directory
+mv $DEF_DIRECTORY/lib/$TARGET/libusb* $LIBUSB_DIRECTORY
 
 #Set the necessary exports and library paths
 cd $DEF_DIRECTORY
