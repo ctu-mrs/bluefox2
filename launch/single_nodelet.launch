@@ -26,6 +26,13 @@
   <arg name="boost" default="false"/>
   <arg name="mm" default="0"/>
 
+  <!-- Arguments for theora quality, images being compressed into "stream" -->
+  <arg name="compressed_jpeg_quality" default="90" />
+  <arg name="theora_keyframe_frequency" default="60"  />
+  <arg name="theora_target_bitrate" default="50000"  />
+  <arg name="theora_quality" default="8"  />
+  <arg name="theora_optimize_for" default="0"  />
+
   <!-- Node Settings -->
   <arg name="plugin" default="false"/>
   <arg name="manager" default="bluefox_manager"/>
@@ -40,13 +47,7 @@
 
   <!-- Manager -->
   <arg if="$(arg plugin)"
-    name="manager" default="single_nodelet"/>
-  <arg if="$(arg plugin)"
     name="option" value="load bluefox2/SingleNodelet $(arg manager)"/>
-  <node if="$(arg plugin)"
-    pkg="nodelet" type="nodelet" name="$(arg manager)" args="manager"
-    output="$(arg output)">
-  </node>
 
   <!-- Nodelet -->
   <node pkg="nodelet" type="nodelet" name="$(arg camera)"
@@ -57,7 +58,7 @@
     <param name="calib_url" type="string" value="$(arg calib_url)"/>
     <param name="fps" type="double" value="$(arg fps)"/>
     <param name="color" type="bool" value="$(arg color)"/>
-    <param name="aec" type="int" value="$(arg aec)"/>
+    <param name="aec" type="bool" value="$(arg aec)"/>
     <param name="cbm" type="bool" value="$(arg cbm)"/>
     <param name="ctm" type="int" value="$(arg ctm)"/>
     <param name="dcfm" type="int" value="$(arg dcfm)"/>
