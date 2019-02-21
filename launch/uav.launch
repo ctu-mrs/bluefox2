@@ -37,6 +37,9 @@
   <arg name="view" default="false"/>
   <arg name="calib" default="false"/>
 
+  <!-- Autoexposure nodelet -->                                                                  
+  <include file="$(find auto_exposure)/launch/uav.launch" />
+
   <group ns="$(arg uav_name)">
   <!-- Node -->
   <node pkg="bluefox2" type="bluefox2_single_node" name="$(arg camera)" output="$(arg output)">
