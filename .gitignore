@@ -81,3 +81,5 @@ html_docs/*
 gen/
 gen/*
 
+# SDK FILES
+install/*/*.tgz
