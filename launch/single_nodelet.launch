@@ -3,6 +3,9 @@
   <!-- Link to the custom libsub (LD_LIBRARY_PATH is searched before ld.so.conf.d, so the custom libusb will be used instead of the system default-->
   <env name="LD_LIBRARY_PATH" value="/opt/mvIMPACT_acquire_libusb:$(env LD_LIBRARY_PATH)" />
 
+  <!-- Node delay for multiple cameras -->
+  <arg name="node_start_delay" default="0"/>
+
   <!-- Common Interface -->
   <arg name="device"/>
   <arg name="rate" default="60"/>
@@ -51,7 +54,7 @@
 
   <!-- Nodelet -->
   <node pkg="nodelet" type="nodelet" name="$(arg camera)"
-    args="$(arg option)" output="$(arg output)">
+    args="$(arg option)" output="$(arg output)" respawn="true" launch-prefix="bash -c 'sleep $(arg node_start_delay); $0 $@' ">
     <param name="identifier" type="string" value="$(arg serial)"/>
     <param name="frame_id" type="string" value="$(arg frame_id)"/>
     <param name="camera_name" type="string" value="$(arg camera_name)"/>
