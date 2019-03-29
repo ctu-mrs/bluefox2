@@ -13,6 +13,8 @@ elif [ "$UNAME_PROC" == "aarch64" ] ; then
   cd ~/git/uav_modules/ros_packages/bluefox2/install/aarch64/
   ./download_driver.sh
   ./install_mvBlueFOX_AARCH64.sh --unattended
+  cd /opt/mvIMPACT_acquire/lib
+  ln -s ./arm64 aarch64
 else
   echo "installing bluefox for x86_64 architecture"
   cd ~/git/uav_modules/ros_packages/bluefox2/install/x86_64/
