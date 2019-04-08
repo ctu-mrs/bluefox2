@@ -30,8 +30,6 @@ class Bluefox2 {
   void SetSlave() const;
   void callbackAec(int &expose_us);
   void callbackAgc(double &gain_db);
-  void callbackExposeUpperLimit(int &max_expose_us);
-  void SetExposeUpperLimit(int &us);
 
  private:
   std::string AvailableDevice() const;
@@ -46,6 +44,7 @@ class Bluefox2 {
   void SetAgc(bool &auto_gain, double &gain_db) const;
   void SetAec(bool &auto_expose, int &expose_us) const;
   void SetAcs(int &acs, int &des_gray_val) const;
+  void SetExposeUpperLimit(int &acs, int &us) const;
 
   void SetWbp(int &wbp, double &r_gain, double &g_gain, double &b_gain) const;
   void SetHdr(bool &hdr) const;

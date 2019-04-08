@@ -122,10 +122,6 @@ void Bluefox2::callbackAec(int &expose_us){
     SetAec(autoexpose, expose_us);
 }
 
-void Bluefox2::callbackExposeUpperLimit(int &max_expose_us){
-    SetExposeUpperLimit(max_expose_us);
-}
-
 void Bluefox2::callbackAgc(double &gain_db){
     bool autogain = false;
     SetAgc(autogain, gain_db);
@@ -148,6 +144,8 @@ void Bluefox2::Configure(Bluefox2DynConfig &config) {
   SetAec(config.aec, config.expose_us);
   // Auto Controller
   SetAcs(config.acs, config.des_grey_value);
+  // Auto exposure upper limit us
+  SetExposeUpperLimit(config.acs, config.expose_upper_limit_us);
 
   // White Balance
   SetWbp(config.wbp, config.r_gain, config.g_gain, config.b_gain);
@@ -220,15 +218,13 @@ void Bluefox2::SetAcs(int &acs, int &des_gray_val) const {
   acs = Bluefox2Dyn_acs_unavailable;
 }
 
-void Bluefox2::SetExposeUpperLimit(int &us) {
+void Bluefox2::SetExposeUpperLimit(int &acs, int &us) const {
   if (cam_set_->autoControlParameters.isAvailable()) {
-    bool agc = false, aec = false;
-    ReadProperty(cam_set_->autoGainControl, agc);
-    ReadProperty(cam_set_->autoExposeControl, aec);
     WriteProperty(cam_set_->autoControlParameters.exposeUpperLimit_us, us);
     std::cout << "bluefox2 setting exposure upper limit to: " << us << std::endl;
     return;
   }
+  acs = Bluefox2Dyn_acs_unavailable;
 }
 
 void Bluefox2::SetWbp(int &wbp, double &r_gain, double &g_gain,

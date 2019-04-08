@@ -24,9 +24,9 @@ Bluefox2Ros::Bluefox2Ros(const ros::NodeHandle& nh, const std::string& prefix)
   bluefox2_.SetMM(mm);
 
   // Set the upper exposure limit
-  int exposure_upper_limit_us;
-  cnh.param<int>("exposure_upper_limit_us", exposure_upper_limit_us, 7500);
-  bluefox2_.SetExposeUpperLimit(exposure_upper_limit_us);
+  /* int exposure_upper_limit_us; */
+  /* cnh.param<int>("exposure_upper_limit_us", exposure_upper_limit_us, 7500); */
+  /* bluefox2_.SetExposeUpperLimit(exposure_upper_limit_us); */
 }
 
 bool Bluefox2Ros::Grab(const sensor_msgs::ImagePtr& image_msg,
