@@ -30,6 +30,8 @@ class Bluefox2 {
   void SetSlave() const;
   void callbackAec(int &expose_us);
   void callbackAgc(double &gain_db);
+  void callbackExposeUpperLimit(int &max_expose_us);
+  void SetExposeUpperLimit(int &us);
 
  private:
   std::string AvailableDevice() const;

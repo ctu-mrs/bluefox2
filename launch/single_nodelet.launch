@@ -28,6 +28,7 @@
   <arg name="gain_db" default="0.0"/>
   <arg name="boost" default="false"/>
   <arg name="mm" default="0"/>
+  <arg name="exposure_uppper_limit_us" default="7500"/>
 
   <!-- Arguments for theora quality, images being compressed into "stream" -->
   <arg name="compressed_jpeg_quality" default="90" />
@@ -71,6 +72,7 @@
     <param name="gain_db" type="double" value="$(arg gain_db)"/>
     <param name="boost" type="bool" value="$(arg boost)"/>
     <param name="mm" type="int" value="$(arg mm)"/>
+    <param name="exposure_upper_limit_us" type="int" value="$(arg exposure_upper_limit_us)"/>
 
     <!-- Params for theora quality, images being compressed into "stream" -->
     <param name="image_raw/compressed/jpeg_quality" type="int" value="$(arg compressed_jpeg_quality)" />
