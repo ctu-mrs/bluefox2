@@ -7,8 +7,8 @@ MY_PATH=`( cd "$MY_PATH" && pwd )`
 # install BLUEFOX
 UNAME_PROC=`uname -m`
 if [ "$UNAME_PROC" == "armv7l" ] ; then
-  echo "installing bluefox for armv71 architecture"
-  cd $MY_PATH/arm/
+  echo "installing bluefox for armv7l architecture"
+  cd $MY_PATH/armv7l/
   ./download_driver.sh
   ./install_mvBlueFOX_ARM.sh --unattended
 elif [ "$UNAME_PROC" == "aarch64" ] ; then
