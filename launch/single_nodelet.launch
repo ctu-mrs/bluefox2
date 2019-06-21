@@ -29,6 +29,7 @@
   <arg name="boost" default="false"/>
   <arg name="mm" default="0"/>
   <arg name="expose_upper_limit_us" default="100000"/>
+  <arg name="des_grey_value" default="128"/>
 
   <!-- Arguments for theora quality, images being compressed into "stream" -->
   <arg name="compressed_jpeg_quality" default="90" />
@@ -73,6 +74,7 @@
     <param name="boost" type="bool" value="$(arg boost)"/>
     <param name="mm" type="int" value="$(arg mm)"/>
     <param name="expose_upper_limit_us" type="int" value="$(arg expose_upper_limit_us)"/>
+    <param name="des_grey_value" type="int" value="$(arg des_grey_value)"/>
 
     <!-- Params for theora quality, images being compressed into "stream" -->
     <param name="image_raw/compressed/jpeg_quality" type="int" value="$(arg compressed_jpeg_quality)" />
