@@ -13,17 +13,17 @@ if [ "$UNAME_PROC" == "armv7l" ] ; then
   echo "installing bluefox for armv7l architecture"
   cd $MY_PATH/armv7l/
   ./download_driver.sh $DOWNLOAD_LINK $VERSION
-  ./install_mvBlueFOX_ARM.sh --unattended
+  ./install_mvBlueFOX_ARM.sh --minimal
 elif [ "$UNAME_PROC" == "aarch64" ] ; then
   echo "installing bluefox for aarch64 architecture"
   cd $MY_PATH/aarch64/
   ./download_driver.sh $DOWNLOAD_LINK $VERSION
-  ./install_mvBlueFOX_AARCH64.sh --unattended
+  ./install_mvBlueFOX_AARCH64.sh --minimal
   cd /opt/mvIMPACT_acquire/lib
   ln -s ./arm64 aarch64
 else
   echo "installing bluefox for x86_64 architecture"
   cd $MY_PATH/x86_64/
   ./download_driver.sh $DOWNLOAD_LINK $VERSION
-  ./install_mvBlueFOX.sh --unattended
+  ./install_mvBlueFOX.sh --minimal
 fi
