@@ -6,6 +6,14 @@
         </description>
     </class>
 
+    <class name="bluefox2/MultiNodelet" type="bluefox2::MultiNodelet"
+        base_class_type="nodelet::Nodelet">
+        <description>
+            This is a nodelet for a multiple cameras
+        </description>
+    </class>
+
+
     <class name="bluefox2/StereoNodelet" type="bluefox2::StereoNodelet"
         base_class_type="nodelet::Nodelet">
         <description>

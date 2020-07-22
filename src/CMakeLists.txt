@@ -7,6 +7,7 @@ add_library(${PROJECT_NAME}
     single/single_nodelet.cpp
     stereo/stereo_nodelet.cpp
     multi/multi_node.cpp
+    multi/multi_nodelet.cpp
     )
 target_link_libraries(${PROJECT_NAME}
     ${mvIMPACT_LIBRARIES}

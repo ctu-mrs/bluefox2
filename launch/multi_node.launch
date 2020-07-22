@@ -5,20 +5,20 @@
 
   <!-- Common Interface -->
   <arg name="rate" default="20"/>
-  <arg name="num_cameras"/>
+  <arg name="num_cameras" default="3"/>
 
   <!-- Camera Settings -->
-  <arg name="camera0" default="25000804"/>
+  <arg name="camera0" default="$(env BLUEFOX_DARPA_LEFT)"/>
   <arg name="camera0_camera_name" default="mv_$(arg camera0)"/>
   <arg name="camera0_calib_url"
     default="file://${ROS_HOME}/camera_info/$(arg camera0_camera_name).yaml"/>
 
-  <arg name="camera1" default="25000851"/>
+  <arg name="camera1" default="$(env BLUEFOX_DARPA_RIGHT)"/>
   <arg name="camera1_camera_name" default="mv_$(arg camera1)"/>
   <arg name="camera1_calib_url"
     default="file://${ROS_HOME}/camera_info/$(arg camera1_camera_name).yaml"/>
 
-  <arg name="camera2" default="25001110"/>
+  <arg name="camera2" default="$(env BLUEFOX_DARPA_UP)"/>
   <arg name="camera2_camera_name" default="mv_$(arg camera2)"/>
   <arg name="camera2_calib_url"
     default="file://${ROS_HOME}/camera_info/$(arg camera2_camera_name).yaml"/>
