@@ -5,7 +5,7 @@ MY_PATH=`dirname "$0"`
 MY_PATH=`( cd "$MY_PATH" && pwd )`
 
 DOWNLOAD_LINK="http://static.matrix-vision.com/mvIMPACT_Acquire"
-VERSION="2.34.0"
+VERSION="2.40.2"
 
 # install BLUEFOX
 UNAME_PROC=`uname -m`
