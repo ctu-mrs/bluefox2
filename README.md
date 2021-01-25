@@ -1,6 +1,8 @@
-[![Build Status](https://travis-ci.org/KumarRobotics/bluefox2.svg?branch=master)](https://travis-ci.org/KumarRobotics/bluefox2)
-
 # Bluefox2
+
+| Build status | [![Build Status](https://github.com/ctu-mrs/bluefox2/workflows/Melodic/badge.svg)](https://github.com/ctu-mrs/bluefox2/actions) | [![Build Status](https://github.com/ctu-mrs/bluefox2/workflows/Noetic/badge.svg)](https://github.com/ctu-mrs/bluefox2/actions) |
+|--------------|---------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+
 *This driver depends on package [`camera_base`](https://github.com/KumarRobotics/camera_base)*
 
 https://github.com/KumarRobotics/bluefox2
@@ -89,13 +91,13 @@ dark current filter mode:
 
 If you are using a color camera, you would want to perform a 'dark current filter calibration` to enhance the quality of acquisition. This is done with the following steps:
 
-1. Start the bluefox node, let it run for about 5-6 minutes until the temperature of the sensor reaches a stable value. Then you would see something like this.  
+1. Start the bluefox node, let it run for about 5-6 minutes until the temperature of the sensor reaches a stable value. Then you would see something like this.
 ![image](http://i.imgur.com/UzJm5Rv.jpg)
-2. Put the lense cap on so that the image looks like this. You can see that there are some pixels that are not completely dark, this is due to the effect of dark current.  
+2. Put the lense cap on so that the image looks like this. You can see that there are some pixels that are not completely dark, this is due to the effect of dark current.
 ![image](http://i.imgur.com/Kk6Rish.jpg)
-3. Select `dcfm_calibrate` from the reconfigure server. The driver will do the dark current calibration and then switch the filter on. You can verify the result by selecting `correction_image` and you will see this.  
+3. Select `dcfm_calibrate` from the reconfigure server. The driver will do the dark current calibration and then switch the filter on. You can verify the result by selecting `correction_image` and you will see this.
 ![image](http://i.imgur.com/NC2AZ2l.jpg)
-4. Then you can switch back to `dcfm_on` and your image would look much better then before.  
+4. Then you can switch back to `dcfm_on` and your image would look much better then before.
 ![image](http://i.imgur.com/WFrVAOB.jpg)
 5. This calibration process cannot be done automatically since it requires the sensor be running for a few minutes and manually putting the lense cap on.
 
