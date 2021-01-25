@@ -43,7 +43,7 @@ cd $MY_PATH/install
 
 mkdir -p ~/catkin_ws/src
 cd ~/catkin_ws/src
-ln -s "$MY_PATH" camera_base
+ln -s ~/camera_base camera_base
 ln -s "$MY_PATH" bluefox2
 source /opt/ros/$ROS_DISTRO/setup.bash
 cd ~/catkin_ws
