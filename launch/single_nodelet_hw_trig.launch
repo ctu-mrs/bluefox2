@@ -8,9 +8,9 @@
 
   <!-- Common Interface -->
   <arg name="device"/>
-  <arg name="rate" default="60"/>
+  <arg name="rate" default="30"/>
 
-  <!-- Camera Settings -->
+  <!-- Camera Settings --> //described in config file
   <arg name="serial" default="$(arg device)"/>
   <arg name="camera_name" default="mv_$(arg serial)"/>
   <arg name="camera" default="$(arg camera_name)"/>
@@ -18,17 +18,17 @@
   <arg name="calib_url" default="file://${ROS_HOME}/camera_info/$(arg camera_name).yaml"/>
   <arg name="fps" default="$(arg rate)"/>
   <arg name="color" default="false"/>
-  <arg name="aec" default="0"/>
-  <arg name="cbm" default="false"/>
-  <arg name="ctm" default="3"/>
-  <arg name="cts" default="0"/>
-  <arg name="dcfm" default="0"/>
-  <arg name="hdr" default="false"/>
-  <arg name="wbp" default="-1"/>
+  <arg name="aec" default="true"/> //true for autoexposure
+  <arg name="cbm" default="false"/> //binnig
+  <arg name="ctm" default="3"/> //trigger mode - if 3 - 4 using expose values, otherwise grows lineary upon expose time
+  <arg name="cts" default="0"/> // trigger source (-1 is also fine)
+  <arg name="dcfm" default="0"/> //dark current filter - case of high darkness
+  <arg name="hdr" default="false"/> // when using hdr change gain_db to 0, otherwise effect will be reversed
+  <arg name="wbp" default="-1"/> //white balance
   <arg name="expose_us" default="5000"/>
-  <arg name="gain_db" default="0.0"/>
+  <arg name="gain_db" default="32.0"/> //max is 32
   <arg name="boost" default="false"/>
-  <arg name="mm" default="0"/>
+  <arg name="mm" default="0"/> // mirror mode
   <arg name="expose_upper_limit_us" default="100000"/>
   <arg name="des_grey_value" default="128"/>
 
@@ -44,7 +44,7 @@
   <arg name="manager" default="bluefox_manager"/>
   <arg name="output" default="screen"/>
   <arg name="proc" default="false"/>
-  <arg name="view" default="false"/>
+  <arg name="view" default="true"/> // true for automatic view window load if false call rosrun rqt_image_view rqt_image_view(options awailable)
   <arg name="calib" default="false"/>
 
   <!-- Standalone -->
@@ -96,6 +96,8 @@
     args="$(arg proc_option)">
     <remap from="image_mono" to="image_raw"/>
     <remap from="image_rect" to="image_rect_mono"/>
+  // <remap from="mv_25003659/expose_publisher" to="exp_publiJURAJ"/>
+    // <remap from="exp_publiJURAJ" to="mv_25003659/expose_publisher"/>
   </node>
 
   <!-- View -->

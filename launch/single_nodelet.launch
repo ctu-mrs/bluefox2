@@ -8,7 +8,7 @@
 
   <!-- Common Interface -->
   <arg name="device"/>
-  <arg name="rate" default="60"/>
+  <arg name="rate" default="30"/>
 
   <!-- Camera Settings -->
   <arg name="serial" default="$(arg device)"/>
@@ -18,12 +18,12 @@
   <arg name="calib_url" default="file://${ROS_HOME}/camera_info/$(arg camera_name).yaml"/>
   <arg name="fps" default="$(arg rate)"/>
   <arg name="color" default="false"/>
-  <arg name="aec" default="0"/>
+  <arg name="aec" default="true"/>
   <arg name="cbm" default="false"/>
   <arg name="ctm" default="1"/>
   <arg name="dcfm" default="0"/>
-  <arg name="hdr" default="false"/>
-  <arg name="wbp" default="-1"/>
+  <arg name="hdr" default="false"/> //when true much better vision
+  <arg name="wbp" default="-1"/> //white balance parameter (used to be -1) 100 is nice
   <arg name="expose_us" default="5000"/>
   <arg name="gain_db" default="0.0"/>
   <arg name="boost" default="false"/>
@@ -43,8 +43,8 @@
   <arg name="manager" default="bluefox_manager"/>
   <arg name="output" default="screen"/>
   <arg name="proc" default="false"/>
-  <arg name="view" default="false"/>
-  <arg name="calib" default="false"/>
+  <arg name="view" default="false"/> // true for automatic view window load if false call rosrun rqt_image_view rqt_image_view(options awailable)
+  <arg name="calib" default="true"/>
 
   <!-- Standalone -->
   <arg unless="$(arg plugin)"

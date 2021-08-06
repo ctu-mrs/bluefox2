@@ -1,24 +1,28 @@
 #include "bluefox2/bluefox2.h"
 #include <sensor_msgs/fill_image.h>
 
-namespace bluefox2 {
+namespace bluefox2
+{
 
 using namespace mvIMPACT::acquire;
 
-Bluefox2::Bluefox2(const std::string &serial) : serial_(serial) {
+Bluefox2::Bluefox2(const std::string &serial) : serial_(serial)
+{
   if (!(dev_ = dev_mgr_.getDeviceBySerial(serial))) {
     throw std::runtime_error(serial + " not found. " + AvailableDevice());
   }
   OpenDevice();
 }
 
-Bluefox2::~Bluefox2() {
+Bluefox2::~Bluefox2()
+{
   if (dev_ && dev_->isOpen()) {
     dev_->close();
   }
 }
 
-std::string Bluefox2::AvailableDevice() const {
+std::string Bluefox2::AvailableDevice() const
+{
   const auto dev_cnt = dev_mgr_.deviceCount();
   std::string devices = std::to_string(dev_cnt) + " availabe device(s): ";
   for (decltype(dev_mgr_.deviceCount()) i = 0; i < dev_cnt; ++i) {
@@ -27,7 +31,8 @@ std::string Bluefox2::AvailableDevice() const {
   return devices;
 }
 
-void Bluefox2::OpenDevice() {
+void Bluefox2::OpenDevice()
+{
   try {
     dev_->open();
   } catch (const ImpactAcquireException &e) {
@@ -44,7 +49,8 @@ void Bluefox2::OpenDevice() {
   img_proc_ = new ImageProcessing(dev_);
 }
 
-int Bluefox2::GetExposeUs() const {
+int Bluefox2::GetExposeUs() const
+{
   if (request_ && request_->isOK()) {
     return request_->infoExposeTime_us.read();
   } else {
@@ -52,7 +58,8 @@ int Bluefox2::GetExposeUs() const {
   }
 }
 
-void Bluefox2::RequestSingle() const {
+void Bluefox2::RequestSingle() const
+{
   int result = DMR_NO_ERROR;
   result = fi_->imageRequestSingle();
   if (result != DMR_NO_ERROR) {
@@ -62,7 +69,8 @@ void Bluefox2::RequestSingle() const {
   }
 }
 
-void Bluefox2::RequestImages(int n) const {
+void Bluefox2::RequestImages(int n) const
+{
   for (int i = 0; i < n; ++i) {
     fi_->imageRequestSingle();
     int requestNr = fi_->imageRequestWaitFor(timeout_ms_);
@@ -70,7 +78,8 @@ void Bluefox2::RequestImages(int n) const {
   }
 }
 
-bool Bluefox2::GrabImage(sensor_msgs::Image &image_msg) {
+bool Bluefox2::GrabImage(sensor_msgs::Image &image_msg)
+{
   // NOTE: A request object is locked for the driver whenever the corresponding
   // wait function returns a valid request object.
   // All requests returned by
@@ -117,17 +126,20 @@ bool Bluefox2::GrabImage(sensor_msgs::Image &image_msg) {
   return true;
 }
 
-void Bluefox2::callbackAec(int &expose_us){
-    bool autoexpose = false;
-    SetAec(autoexpose, expose_us);
+void Bluefox2::callbackAec(int &expose_us)
+{
+  bool autoexpose = false;
+  SetAec(autoexpose, expose_us);
 }
 
-void Bluefox2::callbackAgc(double &gain_db){
-    bool autogain = false;
-    SetAgc(autogain, gain_db);
+void Bluefox2::callbackAgc(double &gain_db)
+{
+  bool autogain = false;
+  SetAgc(autogain, gain_db);
 }
 
-void Bluefox2::Configure(Bluefox2DynConfig &config) {
+void Bluefox2::Configure(Bluefox2DynConfig &config)
+{
   // Clear request queue
   fi_->imageRequestReset(0, 0);
 
@@ -137,7 +149,6 @@ void Bluefox2::Configure(Bluefox2DynConfig &config) {
   SetIdpf(config.idpf);
   // Binning
   SetCbm(config.cbm);
-
   // Gain
   SetAgc(config.agc, config.gain_db);
   // Expose
@@ -146,7 +157,6 @@ void Bluefox2::Configure(Bluefox2DynConfig &config) {
   SetAcs(config.acs, config.des_grey_value);
   // Auto exposure upper limit us
   SetExposeUpperLimit(config.acs, config.expose_upper_limit_us);
-
   // White Balance
   SetWbp(config.wbp, config.r_gain, config.g_gain, config.b_gain);
   // High Dynamic Range
@@ -166,33 +176,39 @@ void Bluefox2::Configure(Bluefox2DynConfig &config) {
   config_ = config;
 }
 
-void Bluefox2::FillCaptureQueue(int &n) const {
+void Bluefox2::FillCaptureQueue(int &n) const
+{
   n = std::min<int>(n, fi_->requestCount() - 1);
   for (int i = 0; i < n; ++i) {
     fi_->imageRequestSingle();
   }
 }
 
-void Bluefox2::SetAoi(int &width, int &height) const {
+void Bluefox2::SetAoi(int &width, int &height) const
+{
   // FIXEM: not implemented
 }
 
-void Bluefox2::SetIdpf(int &idpf) const {
+void Bluefox2::SetIdpf(int &idpf) const
+{
   WriteAndReadProperty(bf_set_->imageDestination.pixelFormat, idpf);
 }
 
-void Bluefox2::SetCbm(int &cbm) const {
+void Bluefox2::SetCbm(int &cbm) const
+{
   WriteAndReadProperty(cam_set_->binningMode, cbm);
 }
 
-void Bluefox2::SetAgc(bool &auto_gain, double &gain_db) const {
+void Bluefox2::SetAgc(bool &auto_gain, double &gain_db) const
+{
   WriteAndReadProperty(cam_set_->autoGainControl, auto_gain);
   if (!auto_gain) {
     WriteAndReadProperty(cam_set_->gain_dB, gain_db);
   }
 }
 
-void Bluefox2::SetAec(bool &auto_expose, int &expose_us) const {
+void Bluefox2::SetAec(bool &auto_expose, int &expose_us) const
+{
   WriteAndReadProperty(cam_set_->autoExposeControl, auto_expose);
   if (!auto_expose) {
     WriteAndReadProperty(cam_set_->expose_us, expose_us);
@@ -200,9 +216,10 @@ void Bluefox2::SetAec(bool &auto_expose, int &expose_us) const {
 }
 
 // TODO: consider adding auto control limit here
-void Bluefox2::SetAcs(int &acs, int &des_gray_val) const {
+void Bluefox2::SetAcs(int &acs, int &des_gray_val) const
+{
   if (cam_set_->autoControlParameters.isAvailable()) {
-    bool agc = false, aec = false;
+    bool agc = false, aec = true;
     ReadProperty(cam_set_->autoGainControl, agc);
     ReadProperty(cam_set_->autoExposeControl, aec);
     if (agc || aec) {
@@ -218,17 +235,18 @@ void Bluefox2::SetAcs(int &acs, int &des_gray_val) const {
   acs = Bluefox2Dyn_acs_unavailable;
 }
 
-void Bluefox2::SetExposeUpperLimit(int &acs, int &us) const {
+void Bluefox2::SetExposeUpperLimit(int &acs, int &us) const
+{
   if (cam_set_->autoControlParameters.isAvailable()) {
     WriteProperty(cam_set_->autoControlParameters.exposeUpperLimit_us, us);
-    std::cout << "bluefox2 setting exposure upper limit to: " << us << std::endl;
     return;
   }
   acs = Bluefox2Dyn_acs_unavailable;
 }
 
 void Bluefox2::SetWbp(int &wbp, double &r_gain, double &g_gain,
-                      double &b_gain) const {
+                      double &b_gain) const
+{
   // Put white balance as unavailable if it's not a color camera
   if (bf_info_->sensorColorMode.read() <= iscmMono) {
     wbp = Bluefox2Dyn_wbp_unavailable;
@@ -271,7 +289,8 @@ void Bluefox2::SetWbp(int &wbp, double &r_gain, double &g_gain,
   }
 }
 
-void Bluefox2::SetHdr(bool &hdr) const {
+void Bluefox2::SetHdr(bool &hdr) const
+{
   auto &hdr_control = cam_set_->getHDRControl();
   if (!hdr_control.isAvailable()) {
     hdr = false;
@@ -285,7 +304,8 @@ void Bluefox2::SetHdr(bool &hdr) const {
   }
 }
 
-void Bluefox2::SetDcfm(int &dcfm) const {
+void Bluefox2::SetDcfm(int &dcfm) const
+{
   if (dcfm == dcfmCalibrateDarkCurrent) {
     // Special case for calibrate mode
     // Set "OffsetAutoCalibration = Off"
@@ -305,17 +325,21 @@ void Bluefox2::SetDcfm(int &dcfm) const {
   }
 }
 
-void Bluefox2::SetCpc(int &cpc) const {
+void Bluefox2::SetCpc(int &cpc) const
+{
   WriteAndReadProperty(cam_set_->pixelClock_KHz, cpc);
 }
 
-void Bluefox2::SetCtm(int &ctm) const {
+void Bluefox2::SetCtm(int &ctm) const
+{
   // Do nothing when set to hard sync
-  if (ctm == Bluefox2Dyn_hard_sync) return;
+  if (ctm == Bluefox2Dyn_hard_sync)
+    return;
   WriteAndReadProperty(cam_set_->triggerMode, ctm);
 }
 
-void Bluefox2::SetCts(int &cts) const {
+void Bluefox2::SetCts(int &cts) const
+{
   // Do nothing when trigger source is not visible
   if (!cam_set_->triggerSource.isVisible()) {
     cts = Bluefox2Dyn_cts_unavailable;
@@ -324,18 +348,21 @@ void Bluefox2::SetCts(int &cts) const {
   WriteAndReadProperty(cam_set_->triggerSource, cts);
 }
 
-bool Bluefox2::IsCtmOnDemandSupported() const {
+bool Bluefox2::IsCtmOnDemandSupported() const
+{
   std::vector<TCameraTriggerMode> values;
   cam_set_->triggerMode.getTranslationDictValues(values);
   return std::find(values.cbegin(), values.cend(), ctmOnDemand) !=
          values.cend();
 }
 
-void Bluefox2::SetMM(int mm) const {
+void Bluefox2::SetMM(int mm) const
+{
   WriteProperty(img_proc_->mirrorModeGlobal, mm);
 }
 
-void Bluefox2::SetMaster() const {
+void Bluefox2::SetMaster() const
+{
   // Prefer on demand if it's available
   if (IsCtmOnDemandSupported()) {
     cam_set_->triggerMode.write(ctmOnDemand);
@@ -348,11 +375,12 @@ void Bluefox2::SetMaster() const {
   std::cout << serial() << ": master" << std::endl;
 }
 
-void Bluefox2::SetSlave() const {
+void Bluefox2::SetSlave() const
+{
   cam_set_->triggerMode.write(ctmOnHighLevel);
   cam_set_->triggerSource.write(ctsDigIn0);
   cam_set_->frameDelay_us.write(0);
   std::cout << serial() << ": slave" << std::endl;
 }
 
-}  // namespace bluefox2
+} // namespace bluefox2

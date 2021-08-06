@@ -15,6 +15,7 @@ find_package(Boost COMPONENTS program_options REQUIRED)
 generate_dynamic_reconfigure_options(cfg/Bluefox2Dyn.cfg)
 
 # services
+add_message_files(FILES exposure.msg)
 add_service_files(FILES SetExposeSrv.srv)
 generate_messages(DEPENDENCIES std_msgs)
 
