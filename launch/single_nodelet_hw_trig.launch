@@ -44,7 +44,7 @@
   <arg name="manager" default="bluefox_manager"/>
   <arg name="output" default="screen"/>
   <arg name="proc" default="false"/>
-  <arg name="view" default="true"/> // true for automatic view window load if false call rosrun rqt_image_view rqt_image_view(options awailable)
+  <arg name="view" default="false"/> // true for automatic view window load if false call rosrun rqt_image_view rqt_image_view(options awailable)
   <arg name="calib" default="false"/>
 
   <!-- Standalone -->
