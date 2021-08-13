@@ -22,19 +22,7 @@ class SingleNode : public camera_base::CameraNodeBase<Bluefox2DynConfig> {
   void callbackAec(const std_msgs::Int32::ConstPtr &expose_us);
   void callbackAgc(const std_msgs::Float32::ConstPtr &gain_db);
   
-  //ja {
-  void InitializePublisher(std::string camera_name){
-  char *dummy = NULL;
-  int   zero  = 0;
-  ros::init(zero, &dummy, "exposePublisher");
-  expose_pub = nh_expose.advertise<exposure>(camera_name + "/expose_publisher", 1);
-  }
-  
   void PublishExposure(int expose_value, const ros::Time& time, std::string camera_name, int fps_rate){
-    if (!initialized){
-    InitializePublisher(camera_name);
-    initialized = true;
-  }
   exposure exposure;
   exposure.exposure_value = expose_value;
   exposure.header.stamp = time;
@@ -44,7 +32,6 @@ class SingleNode : public camera_base::CameraNodeBase<Bluefox2DynConfig> {
 
   expose_pub.publish(exposure);
   }
-  //}
 
  private:
   boost::shared_ptr<Bluefox2Ros> bluefox2_ros_;
@@ -52,12 +39,9 @@ class SingleNode : public camera_base::CameraNodeBase<Bluefox2DynConfig> {
   ros::Subscriber sub_expose_us;
   ros::Subscriber sub_gain_db;
   ros::NodeHandle nh;
-  ros::NodeHandle nh_expose;
   
-  //ja{
   ros::Publisher expose_pub;
   bool initialized = false;
-  //}
 };
 
 }  // namespace bluefox2

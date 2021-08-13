@@ -18,6 +18,8 @@ SingleNode::SingleNode(const ros::NodeHandle &pnh)
       nh.subscribe("expose_us", 1, &bluefox2::SingleNode::callbackAec, this);
   sub_gain_db =
       nh.subscribe("gain_db", 1, &bluefox2::SingleNode::callbackAgc, this);
+
+  expose_pub = nh.advertise<exposure>("expose_publisher", 10);
 }
 
 void SingleNode::Acquire()
@@ -25,15 +27,10 @@ void SingleNode::Acquire()
   while (is_acquire() && ros::ok()) {
     std::chrono::steady_clock::time_point now =
         std::chrono::steady_clock::now();
-    // std::cout << "Time difference (sec) = "
-    //           << std::chrono::duration_cast<std::chrono::microseconds>(now -
-    //                                                                    prev)
-    //                  .count()
-    //           << std::endl;
+
     bluefox2_ros_->RequestSingle();
     const auto expose_us = bluefox2_ros_->camera().GetExposeUs();
 
-    // std::cout << expose_us << std::endl;
     const auto expose_duration = ros::Duration(expose_us * 1e-6 / 2);
     const auto time = ros::Time::now() + expose_duration;
     bluefox2_ros_->PublishCamera(time);
@@ -41,7 +38,6 @@ void SingleNode::Acquire()
         1000000 /
         std::chrono::duration_cast<std::chrono::microseconds>(now - prev)
             .count();
-    // std::cout << "counted rate is: " << fps_rate << std::endl;
 
     PublishExposure(expose_us, time, bluefox2_ros_->frame_id(), fps_rate);
     Sleep();
