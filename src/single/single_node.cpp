@@ -27,10 +27,15 @@ void SingleNode::Acquire()
   while (is_acquire() && ros::ok()) {
     std::chrono::steady_clock::time_point now =
         std::chrono::steady_clock::now();
+<<<<<<< HEAD
 
     bluefox2_ros_->RequestSingle();
     const auto expose_us = bluefox2_ros_->camera().GetExposeUs();
 
+=======
+    bluefox2_ros_->RequestSingle();
+    const auto expose_us = bluefox2_ros_->camera().GetExposeUs();
+>>>>>>> de044c9fd930d94a642d6227ac5fc993ba087fdc
     const auto expose_duration = ros::Duration(expose_us * 1e-6 / 2);
     const auto time = ros::Time::now() + expose_duration;
     bluefox2_ros_->PublishCamera(time);
@@ -38,7 +43,10 @@ void SingleNode::Acquire()
         1000000 /
         std::chrono::duration_cast<std::chrono::microseconds>(now - prev)
             .count();
+<<<<<<< HEAD
 
+=======
+>>>>>>> de044c9fd930d94a642d6227ac5fc993ba087fdc
     PublishExposure(expose_us, time, bluefox2_ros_->frame_id(), fps_rate);
     Sleep();
     prev = now;
