@@ -96,8 +96,6 @@
     args="$(arg proc_option)">
     <remap from="image_mono" to="image_raw"/>
     <remap from="image_rect" to="image_rect_mono"/>
-  // <remap from="mv_25003659/expose_publisher" to="exp_publiJURAJ"/>
-    // <remap from="exp_publiJURAJ" to="mv_25003659/expose_publisher"/>
   </node>
 
   <!-- View -->
