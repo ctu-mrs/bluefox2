@@ -26,10 +26,10 @@
   <arg name="hdr" default="false"/> // when using hdr change gain_db to 0, otherwise effect will be reversed
   <arg name="wbp" default="-1"/> //white balance
   <arg name="expose_us" default="5000"/>
-  <arg name="gain_db" default="32.0"/> //max is 32
+  <arg name="gain_db" default="12.0"/> //max is 32 - ISO from expose triangle, but fro us limited to 12
   <arg name="boost" default="false"/>
   <arg name="mm" default="0"/> // mirror mode
-  <arg name="expose_upper_limit_us" default="100000"/>
+  <arg name="expose_upper_limit_us" default="60000"/> //lower exp level to limit the camera
   <arg name="des_grey_value" default="128"/>
 
   <!-- Arguments for theora quality, images being compressed into "stream" -->

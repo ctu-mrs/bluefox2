@@ -17,7 +17,7 @@ class Bluefox2 {
   std::string product() const { return dev_->product.readS(); }
   int timeout_ms() const { return timeout_ms_; }
   void set_timeout_ms(int timeout_ms) { timeout_ms_ = timeout_ms; }
-
+  
   int GetExposeUs() const;
 
   void OpenDevice();
@@ -30,7 +30,11 @@ class Bluefox2 {
   void SetSlave() const;
   void callbackAec(int &expose_us);
   void callbackAgc(double &gain_db);
+  void RescaleExposeLimits(int act_expose);
 
+  bool AUTO_EXPOSE;                                                                                                                                                         
+  const int EXPOSE_JUMP = 1000;
+  
  private:
   std::string AvailableDevice() const;
 

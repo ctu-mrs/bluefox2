@@ -37,6 +37,7 @@ void SingleNode::Acquire()
         std::chrono::duration_cast<std::chrono::microseconds>(now - prev)
             .count();
     PublishExposure(expose_us, time, bluefox2_ros_->frame_id(), fps_rate);
+    bluefox2_ros_->camera().RescaleExposeLimits(expose_us);
     prev = now;
     Sleep();
   }

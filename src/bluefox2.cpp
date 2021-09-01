@@ -142,7 +142,6 @@ void Bluefox2::Configure(Bluefox2DynConfig &config)
 {
   // Clear request queue
   fi_->imageRequestReset(0, 0);
-
   // Area of Intreset
   SetAoi(config.width, config.height);
   // Pixel Format
@@ -172,6 +171,7 @@ void Bluefox2::Configure(Bluefox2DynConfig &config)
   // Request
   FillCaptureQueue(config.request);
 
+  AUTO_EXPOSE = config.aec;
   // Cache this config
   config_ = config;
 }
@@ -242,6 +242,20 @@ void Bluefox2::SetExposeUpperLimit(int &acs, int &us) const
     return;
   }
   acs = Bluefox2Dyn_acs_unavailable;
+}
+
+void Bluefox2::RescaleExposeLimits(int act_expose) //even when is called while publishing every image the limits moves every fifth time
+{
+  if (cam_set_->autoControlParameters.isAvailable() && AUTO_EXPOSE) {
+    if(act_expose + EXPOSE_JUMP >= 60000)
+      WriteProperty(cam_set_->autoControlParameters.exposeUpperLimit_us, 60000);
+    else
+      WriteProperty(cam_set_->autoControlParameters.exposeUpperLimit_us, act_expose + EXPOSE_JUMP);
+    if(act_expose - EXPOSE_JUMP <= 12)
+      WriteProperty(cam_set_->autoControlParameters.exposeLowerLimit_us, 12);
+    else
+      WriteProperty(cam_set_->autoControlParameters.exposeLowerLimit_us, act_expose - EXPOSE_JUMP);              
+  }
 }
 
 void Bluefox2::SetWbp(int &wbp, double &r_gain, double &g_gain,
