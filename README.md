@@ -14,6 +14,9 @@ https://github.com/KumarRobotics/bluefox2
 ## Supported hardware
 This driver should work with any Matrix-Vision Bluefox usb2.0 MLC cameras (bluefox2).
 
+## Finding camera serial number
+Run `rosrun bluefox2 bluefox2_list_cameras` to list info about all connected cameras.
+
 ## API Stability
 The ROS API of this driver should be considered **unstable**.
 
