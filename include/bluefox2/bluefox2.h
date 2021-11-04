@@ -33,7 +33,7 @@ class Bluefox2 {
   void RescaleExposeLimits(int act_expose);
 
   bool AUTO_EXPOSE;                                                                                                                                                         
-  const int EXPOSE_JUMP = 1000;
+  int EXPOSE_JUMP = 100;
   
  private:
   std::string AvailableDevice() const;
@@ -56,6 +56,8 @@ class Bluefox2 {
   void SetCpc(int &cpc) const;
   void SetCtm(int &ctm) const;
   void SetCts(int &cts) const;
+
+  void SetExposeJump(int &expose_jump);
 
   // Request
   void FillCaptureQueue(int &n) const;
