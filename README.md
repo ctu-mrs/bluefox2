@@ -22,9 +22,14 @@ The ROS API of this driver should be considered **unstable**.
 
 ## ROS API
 
-### single_node
+### Single nodelet
 
-`single_node` is a node for a single bluefox2 camera.
+- `single_nodelet.launch` is a nodelet for a single bluefox2 camera.
+- Can be included in custom launch files.
+
+### Example
+
+- `example.lauch` is an example of how to include `single_nodelet.launch` in custom launch files.
 
 #### Published topics
 
@@ -42,17 +47,13 @@ Contains the camera calibration (if calibrated) and extra data about the camera 
 
 `~device` (`string`)
 
-This will be the same as `serial`.
+The device serial id.
 
-`~rate` (`double`)
+`~fps` (`double`)
 
-This will be the same as `fps`.
+The desired frame rate of the camera.
 
 **Normal parameters**
-
-`~serial` (`string`, default: `<device>`)
-
-bluefox2 camera serial number.
 
 `~camera_name` (`string`, default: `mv_<serial>`)
 
@@ -112,55 +113,9 @@ Only 200wG camera supports this mode, set `hdr` to `true` for other cameras will
 
 This mode is required when high fps desired which allows 200wG to work at 90 fps and 200bG at 24 fps (with `ctm = 1`). Using this will result in imprecise time stamp of captured image. Use with caution.
 
-### stereo_node
-
-`stereo_node` is a node for 2 bluefox2 cameras in stereo configuration.
-
-#### Published topics
-
-`~left/image_raw` ([sensor_msgs/Image](http://docs.ros.org/api/sensor_msgs/html/msg/Image.html))
-
-`~right/image_raw` ([sensor_msgs/Image](http://docs.ros.org/api/sensor_msgs/html/msg/Image.html))
-
-The unprocessed image data.
-
-`~/left/camera_info` ([sensor_msgs/CameraInfo](http://docs.ros.org/api/sensor_msgs/html/msg/CameraInfo.html))
-
-`~/right/camera_info` ([sensor_msgs/CameraInfo](http://docs.ros.org/api/sensor_msgs/html/msg/CameraInfo.html))
-
-Contains the camera calibration (if calibrated) and extra data about the camera configuration.
-
-**Common interface**
-
-`~rate` (`double`)
-
-This will be the same as `fps`.
-
-**Normal parameters**
-
-`~left` (`string`, default: `<left_serial>`)
-
-`~right` (`string`, default: `<right_serial>`)
-
-bluefox2 camera serial number for the left and right camera.
-
-`~left_camera_name` (`string`, default: `mv_<left_serial>`)
-
-`~right_camera_name` (`string`, default: `mv_<right_serial>`)
-
-Camera name used by `camera_info_manager` for load calibration file, should be the same as the name in `calib_<serial>.yml`.
-
-`~left_calib_url` (`string`, default: `package://bluefox2/calib/calib_<left_serial>.yml`)
-
-`~right_calib_url` (`string`, default: `package://bluefox2/calib/calib_<right_serial>.yml`)
-
-camera calibration URL for the left and right camera.
-
-All the rest parameters are the same with `single_node`, changing them will change the corresponding settings in both cameras.
-
 ## Hardware sync
 
-Notice that if you are using two 200w cameras, there's no need to use hardware synchronization because software synchronization is supported. The stereo_node will send two request one after another and the delay could be ignored.
+Notice that if you are using two 200w cameras, there's no need to use hardware synchronization because software synchronization is supported.
 
 [Using 2 mvBlueFOX-MLC cameras in Master-Slave mode](http://www.matrix-vision.com/manuals/mvBlueFOX/UseCases_page_0.html#UseCases_section_MasterSlave_Mode)
 
