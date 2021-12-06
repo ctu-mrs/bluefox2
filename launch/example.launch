@@ -1,0 +1,48 @@
+<launch>
+
+  <!-- Set namespace of the bluefox2 driver -->
+  <arg name="uav_name" default="$(env UAV_NAME)"/>
+  <arg name="namespace" default="$(arg uav_name)"/>
+  <group ns="$(arg namespace)">
+
+    <!-- Include default launch file -->
+    <include file="$(find bluefox2)/launch/single_nodelet.launch">
+
+      <!-- Change relevant arguments (refer to default launch file for a list of arguments) -->
+
+      <!-- The camera name used as namespace for topics -->
+      <arg name="camera_name" default="bluefox"/>
+
+      <!-- Run inside nodelet manager (true) or standalone (false) -->
+      <arg name="plugin" default="false"/>
+
+      <!-- Name of the manager to load this nodelet into (if plugin==true) -->
+      <arg name="manager" default="bluefox_manager"/>
+
+      <!-- Publish rectified images -->
+      <arg name="proc" default="false"/>
+
+      <!-- Show image from camera -->
+      <arg name="view" default="false"/>
+
+      <!-- Run calibration (specify number of squares and their size)-->
+      <arg name="calib" default="true"/>
+      <arg name="size" default="8x6"/>
+      <arg name="square" default="0.108"/>
+
+      <!-- The desired FPS of the camera (may not be reached if exposition time is too long) -->
+      <arg name="rate" default="20"/>
+
+      <!-- Automatic exposure -->
+      <arg name="aec" default="1"/>
+      
+      <!-- The brightness setpoint (0-255) -->
+      <arg name="des_grey_value" default="128"/>
+
+      <!-- Upper limit of the exposition time (useful for preventing motion blur, but brightness setpoint may not be reached) -->
+      <arg name="expose_upper_limit_us" default="50000"/>
+
+    </include>
+
+  </group>
+</launch>

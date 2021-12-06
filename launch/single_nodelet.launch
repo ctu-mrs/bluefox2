@@ -7,7 +7,7 @@
   <arg name="node_start_delay" default="0"/>
 
   <!-- Common Interface -->
-  <arg name="device"/>
+  <arg name="device" default="$(env BLUEFOX)"/>
   <arg name="rate" default="60"/>
 
   <!-- Camera Settings -->
@@ -15,17 +15,21 @@
   <arg name="camera_name" default="mv_$(arg serial)"/>
   <arg name="camera" default="$(arg camera_name)"/>
   <arg name="frame_id" default="$(arg camera)"/>
-  <arg name="calib_url" default="file://${ROS_HOME}/camera_info/$(arg camera_name).yaml"/>
+  <arg name="calib_url" default="file://$(find mrs_uav_general)/config/camera_calibrations/mv_$(arg device).yaml"/>
   <arg name="fps" default="$(arg rate)"/>
-  <arg name="color" default="false"/>
-  <arg name="aec" default="0"/>
-  <arg name="cbm" default="false"/>
+
+  <arg name="color" default="true"/>
+  <arg name="idpf" default="0"/>
+  <arg name="aec" default="true"/>
+  <arg name="expose_us" default="10000"/>
+  <arg name="agc" default="true"/>
+  <arg name="gain_db" default="0.0"/>
+  <arg name="cbm" default="0"/>
   <arg name="ctm" default="1"/>
   <arg name="dcfm" default="0"/>
   <arg name="hdr" default="false"/>
   <arg name="wbp" default="-1"/>
-  <arg name="expose_us" default="5000"/>
-  <arg name="gain_db" default="0.0"/>
+  <arg name="request" default="0"/>
   <arg name="boost" default="false"/>
   <arg name="mm" default="0"/>
   <arg name="expose_upper_limit_us" default="100000"/>
@@ -46,6 +50,10 @@
   <arg name="view" default="false"/>
   <arg name="calib" default="false"/>
 
+  <!-- Calibration settings -->
+  <arg name="size" default="8x6"/>
+  <arg name="square" default="0.108"/>
+
   <!-- Standalone -->
   <arg unless="$(arg plugin)"
     name="option" value="standalone bluefox2/SingleNodelet"/>
@@ -62,16 +70,17 @@
     <param name="camera_name" type="string" value="$(arg camera_name)"/>
     <param name="calib_url" type="string" value="$(arg calib_url)"/>
     <param name="fps" type="double" value="$(arg fps)"/>
-    <param name="color" type="bool" value="$(arg color)"/>
+    <param name="idpf" type="int" value="$(arg idpf)"/>
     <param name="aec" type="bool" value="$(arg aec)"/>
-    <param name="cbm" type="bool" value="$(arg cbm)"/>
+    <param name="expose_us" type="int" value="$(arg expose_us)"/>
+    <param name="agc" type="bool" value="$(arg aec)"/>
+    <param name="gain_db" type="double" value="$(arg gain_db)"/>
+    <param name="cbm" type="int" value="$(arg cbm)"/>
     <param name="ctm" type="int" value="$(arg ctm)"/>
     <param name="dcfm" type="int" value="$(arg dcfm)"/>
     <param name="hdr" type="bool" value="$(arg hdr)"/>
     <param name="wbp" type="int" value="$(arg wbp)"/>
-    <param name="expose_us" type="int" value="$(arg expose_us)"/>
-    <param name="gain_db" type="double" value="$(arg gain_db)"/>
-    <param name="boost" type="bool" value="$(arg boost)"/>
+    <param name="request" type="int" value="$(arg request)"/>
     <param name="mm" type="int" value="$(arg mm)"/>
     <param name="expose_upper_limit_us" type="int" value="$(arg expose_upper_limit_us)"/>
     <param name="des_grey_value" type="int" value="$(arg des_grey_value)"/>
@@ -85,16 +94,18 @@
   </node>
 
   <!--Proc-->
-  <arg if="$(arg plugin)"
-    name="proc_option" value="load image_proc/rectify $(arg manager)"/>
-  <arg unless="$(arg plugin)"
-    name="proc_option" value="standalone image_proc/rectify"/>
-  <node if="$(arg proc)"
-    pkg="nodelet" type="nodelet" name="rectify_mono" ns="$(arg camera)"
-    args="$(arg proc_option)">
-    <remap from="image_mono" to="image_raw"/>
-    <remap from="image_rect" to="image_rect_mono"/>
-  </node>
+  <group if="$(arg proc)">
+    <arg if="$(arg plugin)"
+      name="proc_option" value="load image_proc/rectify $(arg manager)"/>
+    <arg unless="$(arg plugin)"
+      name="proc_option" value="standalone image_proc/rectify"/>
+    <node if="$(arg proc)"
+      pkg="nodelet" type="nodelet" name="rectify_mono" ns="$(arg camera)"
+      args="$(arg proc_option)">
+      <remap from="image_mono" to="image_raw"/>
+      <remap from="image_rect" to="image_rect_mono"/>
+    </node>
+  </group>
 
   <!-- View -->
   <arg name="image" default="image_raw"/>
@@ -102,4 +113,16 @@
     pkg="image_view" type="image_view" name="viewer"
     output="$(arg output)" ns="$(arg camera)" args="image:=$(arg image)">
   </node>
+
+  <!-- Calib -->
+  <group if="$(arg calib)">
+    <arg name="pattern" default="chessboard"/>
+    <arg name="num_dist_coeff" default="2"/>
+    <node pkg="camera_calibration" type="cameracalibrator.py"
+      name="calibrator" output="screen"
+      args="-p $(arg pattern) -s $(arg size) -q $(arg square)
+      -k $(arg num_dist_coeff)
+      image:=/$(arg camera)/image_raw camera:=/$(arg camera)">
+    </node>
+  </group>
 </launch>
