@@ -20,18 +20,18 @@
       <arg name="manager" default="bluefox_manager"/>
 
       <!-- Publish rectified images -->
-      <arg name="proc" default="false"/>
+      <arg name="rectify" default="false"/>
 
       <!-- Show image from camera -->
       <arg name="view" default="false"/>
 
       <!-- Run calibration (specify number of squares and their size)-->
-      <arg name="calib" default="true"/>
+      <arg name="calib" default="false"/>
       <arg name="size" default="8x6"/>
       <arg name="square" default="0.108"/>
 
       <!-- The desired FPS of the camera (may not be reached if exposition time is too long) -->
-      <arg name="rate" default="20"/>
+      <arg name="fps" default="20"/>
 
       <!-- Automatic exposure -->
       <arg name="aec" default="1"/>
