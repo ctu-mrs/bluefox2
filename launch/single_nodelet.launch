@@ -66,15 +66,9 @@
   <!-- High dynamic range (0 - off, 1 - on) -->
   <arg name="hdr" default="false"/>
 
-  <!-- Color TODO: ??? -->
-  <arg name="color" default="false"/>
-
-  <!-- Request capture queue count TODO: ??? -->
+  <!-- Request capture queue count -->
   <arg name="request" default="5"/>
   
-  <!-- Boost TODO: ??? -->
-  <arg name="boost" default="true"/>
-
 <!--//}-->
 
 <!--//{ Compression settings -->
