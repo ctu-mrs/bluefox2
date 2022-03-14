@@ -7,7 +7,7 @@
   <arg name="node_start_delay" default="0"/>
 
   <!-- Device serial number (can be found by rosrun bluefox2 bluefox2_list_cameras -->
-  <arg name="device" default="$(env BLUEFOX)"/>
+  <arg name="device" default="$(optenv BLUEFOX)"/>
 
   <!-- Camera name (used for node name and topic namespace) -->
   <arg name="camera_name" default="mv_$(arg device)"/>
