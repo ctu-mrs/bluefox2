@@ -1,9 +1,11 @@
 #include "bluefox2/bluefox2_ros.h"
 
-namespace bluefox2 {
+namespace bluefox2
+{
 
-Bluefox2Ros::Bluefox2Ros(const ros::NodeHandle& nh, const std::string& prefix)
-    : CameraRosBase(nh, prefix), bluefox2_(identifier()) {
+Bluefox2Ros::Bluefox2Ros(const ros::NodeHandle &nh, const std::string &prefix)
+    : CameraRosBase(nh, prefix), bluefox2_(identifier())
+{
   //  bluefox2_.OpenDevice();
   SetHardwareId(bluefox2_.serial());
 
@@ -25,14 +27,16 @@ Bluefox2Ros::Bluefox2Ros(const ros::NodeHandle& nh, const std::string& prefix)
 
   // Set the upper exposure limit
   /* int exposure_upper_limit_us; */
-  /* cnh.param<int>("exposure_upper_limit_us", exposure_upper_limit_us, 7500); */
+  /* cnh.param<int>("exposure_upper_limit_us", exposure_upper_limit_us, 7500);
+   */
   /* bluefox2_.SetExposeUpperLimit(exposure_upper_limit_us); */
 }
 
-bool Bluefox2Ros::Grab(const sensor_msgs::ImagePtr& image_msg,
-                       const sensor_msgs::CameraInfoPtr& cinfo_msg) {
+bool Bluefox2Ros::Grab(const sensor_msgs::ImagePtr &image_msg,
+                       const sensor_msgs::CameraInfoPtr &cinfo_msg)
+{
   // Add expose time to current time stamp
   return bluefox2_.GrabImage(*image_msg);
 }
 
-}  // namespace bluefox2
+} // namespace bluefox2
