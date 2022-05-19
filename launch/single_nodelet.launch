@@ -33,6 +33,9 @@
   <!-- Upper limit of exposure time (only when aec == true) -->
   <arg name="expose_upper_limit_us" default="100000"/>
 
+  <!-- Maximal change of exposure time in one step (only when aec == true), can be used to slow down exposure changes more than using acs, e.g., when using the camera under artificial light, set to e.g. 1000 when needed -->
+  <arg name="max_expose_jump" default="1000000"/>
+
   <!-- Auto exposure control speed (0 - slow, 1 - medium, 2 - fast) -->
   <arg name="acs" default="2"/>
 
@@ -132,6 +135,7 @@
     <param name="request" type="int" value="$(arg request)"/>
     <param name="mm" type="int" value="$(arg mm)"/>
     <param name="expose_upper_limit_us" type="int" value="$(arg expose_upper_limit_us)"/>
+    <param name="max_expose_jump" type="int" value="$(arg max_expose_jump)"/>
     <param name="des_grey_value" type="int" value="$(arg des_grey_value)"/>
     <param name="acs" type="int" value="$(arg acs)"/>
 
