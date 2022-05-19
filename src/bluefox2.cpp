@@ -160,6 +160,7 @@ void Bluefox2::Configure(Bluefox2DynConfig &config) {
   FillCaptureQueue(config.request);
 
   AUTO_EXPOSE = config.aec;
+  EXPOSE_UPPER_LIMIT = config.expose_upper_limit_us;
   // Cache this config
   config_ = config;
 }
@@ -227,8 +228,8 @@ void Bluefox2::SetExposeUpperLimit(int &acs, int &us) const {
 void Bluefox2::RescaleExposeLimits(int act_expose)  // even when is called while publishing every image the limits moves every fifth time
 {
   if (cam_set_->autoControlParameters.isAvailable() && AUTO_EXPOSE) {
-    if (act_expose + EXPOSE_JUMP >= 60000)
-      WriteProperty(cam_set_->autoControlParameters.exposeUpperLimit_us, 60000);
+    if (act_expose + EXPOSE_JUMP >= EXPOSE_UPPER_LIMIT)
+      WriteProperty(cam_set_->autoControlParameters.exposeUpperLimit_us, EXPOSE_UPPER_LIMIT);
     else
       WriteProperty(cam_set_->autoControlParameters.exposeUpperLimit_us, act_expose + EXPOSE_JUMP);
     if (act_expose - EXPOSE_JUMP <= 12)

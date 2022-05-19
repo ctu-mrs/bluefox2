@@ -34,6 +34,7 @@ class Bluefox2 {
 
   bool AUTO_EXPOSE;                                                                                                                                                         
   int EXPOSE_JUMP = 100;
+  int EXPOSE_UPPER_LIMIT = 100000;
   
  private:
   std::string AvailableDevice() const;
