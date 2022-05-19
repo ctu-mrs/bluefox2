@@ -3,18 +3,22 @@
 #include <nodelet/nodelet.h>
 #include <pluginlib/class_list_macros.h>
 
-namespace bluefox2 {
+namespace bluefox2
+{
 
-class SingleNodelet : public nodelet::Nodelet {
- public:
+class SingleNodelet : public nodelet::Nodelet
+{
+public:
   SingleNodelet() = default;
-  ~SingleNodelet() {
+  ~SingleNodelet()
+  {
     if (single_node_) {
       single_node_->End();
     }
   }
 
-  virtual void onInit() {
+  virtual void onInit()
+  {
     try {
       single_node_.reset(new SingleNode(getPrivateNodeHandle()));
       single_node_->Run();
@@ -24,10 +28,10 @@ class SingleNodelet : public nodelet::Nodelet {
     }
   }
 
- private:
+private:
   std::unique_ptr<SingleNode> single_node_;
 };
 
 PLUGINLIB_EXPORT_CLASS(bluefox2::SingleNodelet, nodelet::Nodelet)
 
-}  // namespace bluefox2
+} // namespace bluefox2
