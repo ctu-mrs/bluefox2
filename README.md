@@ -1,7 +1,7 @@
 # Bluefox2
 
-| Build status | [![Build Status](https://github.com/ctu-mrs/bluefox2/workflows/Melodic/badge.svg)](https://github.com/ctu-mrs/bluefox2/actions) | [![Build Status](https://github.com/ctu-mrs/bluefox2/workflows/Noetic/badge.svg)](https://github.com/ctu-mrs/bluefox2/actions) |
-|--------------|---------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| Build status | [![Build Status](https://github.com/ctu-mrs/bluefox2/workflows/Noetic/badge.svg)](https://github.com/ctu-mrs/bluefox2/actions) |
+|--------------|--------------------------------------------------------------------------------------------------------------------------------|
 
 *This driver depends on package [`camera_base`](https://github.com/KumarRobotics/camera_base)*
 
