@@ -9,7 +9,7 @@ trap 'echo "$0: \"${last_command}\" command failed with exit code $?"' ERR
 MY_PATH=`dirname "$0"`
 MY_PATH=`( cd "$MY_PATH" && pwd )`
 
-DOWNLOAD_LINK="http://static.matrix-vision.com/mvIMPACT_Acquire"
+DOWNLOAD_LINK="http://assets-2.balluff.com/mvIMPACT_Acquire"
 VERSION="2.34.0"
 
 echo "$0: Installing Bluefox SDK"
