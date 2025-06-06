@@ -1,0 +1,236 @@
+#!/usr/bin/env python3
+
+import os
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument, GroupAction, ExecuteProcess
+from launch.conditions import IfCondition, UnlessCondition
+from launch.substitutions import LaunchConfiguration, EnvironmentVariable, PathJoinSubstitution, TextSubstitution
+from launch_ros.actions import Node
+from launch_ros.substitutions import FindPackageShare
+from launch.substitutions import PythonExpression
+
+
+def generate_launch_description():
+    # Declare launch arguments
+    declare_node_start_delay = DeclareLaunchArgument(
+        'node_start_delay',
+        default_value='0',
+        description='Node delay for multiple cameras (driver can crash if run multiple times in the same moment)'
+    )
+    
+    declare_device = DeclareLaunchArgument(
+        'device',
+        default_value=EnvironmentVariable('BLUEFOX', default_value=''),
+        description='Device serial number (can be found by running bluefox2_list_cameras)'
+    )
+    
+    declare_camera_name = DeclareLaunchArgument(
+        'camera_name',
+        default_value=[TextSubstitution(text='mv_'), LaunchConfiguration('device')],
+        description='Camera name (used for node name and topic namespace)'
+    )
+    
+    declare_camera = DeclareLaunchArgument(
+        'camera',
+        default_value=LaunchConfiguration('camera_name'),
+        description='Camera alias'
+    )
+    
+    declare_frame_id = DeclareLaunchArgument(
+        'frame_id',
+        default_value=LaunchConfiguration('camera'),
+        description='Frame id (used in the header of ROS messages)'
+    )
+    
+    declare_calib_url = DeclareLaunchArgument(
+        'calib_url',
+        default_value="",
+        # default_value=[
+        #     TextSubstitution(text='file://'),
+        #     PathJoinSubstitution([
+        #         FindPackageShare('mrs_uav_deployment'),
+        #         'config/camera_calibrations/mv_',
+        #     ]),
+        #     LaunchConfiguration('device'),
+        #     TextSubstitution(text='.yaml')
+        # ],
+        description='The path to the calibration file'
+    )
+    
+    # Camera settings
+    declare_fps = DeclareLaunchArgument('fps', default_value='60', description='Frame rate')
+    declare_aec = DeclareLaunchArgument('aec', default_value='true', description='Auto exposure control')
+    declare_des_grey_value = DeclareLaunchArgument('des_grey_value', default_value='128', description='Desired brightness 0-255 (only when aec == true)')
+    declare_expose_upper_limit_us = DeclareLaunchArgument('expose_upper_limit_us', default_value='100000', description='Upper limit of exposure time (only when aec == true)')
+    declare_max_expose_jump = DeclareLaunchArgument('max_expose_jump', default_value='1000000', description='Maximal change of exposure time in one step (only when aec == true)')
+    declare_acs = DeclareLaunchArgument('acs', default_value='2', description='Auto exposure control speed (0 - slow, 1 - medium, 2 - fast)')
+    declare_expose_us = DeclareLaunchArgument('expose_us', default_value='10000', description='Exposure time in microseconds (only when aec == false)')
+    declare_agc = DeclareLaunchArgument('agc', default_value='true', description='Auto gain control')
+    declare_gain_db = DeclareLaunchArgument('gain_db', default_value='0.0', description='Gain (only when agc == false)')
+    declare_wbp = DeclareLaunchArgument('wbp', default_value='3', description='White balance parameter')
+    declare_idpf = DeclareLaunchArgument('idpf', default_value='0', description='Pixel format')
+    declare_mm = DeclareLaunchArgument('mm', default_value='0', description='Mirror the captured image')
+    declare_cbm = DeclareLaunchArgument('cbm', default_value='0', description='Camera binning mode')
+    declare_ctm = DeclareLaunchArgument('ctm', default_value='1', description='Camera trigger mode')
+    declare_dcfm = DeclareLaunchArgument('dcfm', default_value='0', description='Dark current filter')
+    declare_hdr = DeclareLaunchArgument('hdr', default_value='false', description='High dynamic range')
+    declare_request = DeclareLaunchArgument('request', default_value='5', description='Request capture queue count')
+    
+    # Compression settings
+    declare_compressed_jpeg_quality = DeclareLaunchArgument('compressed_jpeg_quality', default_value='90')
+    declare_theora_keyframe_frequency = DeclareLaunchArgument('theora_keyframe_frequency', default_value='60')
+    declare_theora_target_bitrate = DeclareLaunchArgument('theora_target_bitrate', default_value='50000')
+    declare_theora_quality = DeclareLaunchArgument('theora_quality', default_value='8')
+    declare_theora_optimize_for = DeclareLaunchArgument('theora_optimize_for', default_value='0')
+    
+    # Node settings
+    declare_output = DeclareLaunchArgument('output', default_value='screen', description='Text output to screen/log')
+    declare_rectify = DeclareLaunchArgument('rectify', default_value='false', description='Run rectification')
+    declare_view = DeclareLaunchArgument('view', default_value='false', description='Run camera viewer')
+    declare_calib = DeclareLaunchArgument('calib', default_value='false', description='Run calibration')
+    
+    # Calibration settings
+    declare_size = DeclareLaunchArgument('size', default_value='8x6', description='Calibration pattern size')
+    declare_square = DeclareLaunchArgument('square', default_value='0.108', description='Calibration square size')
+    declare_image = DeclareLaunchArgument('image', default_value='image_raw', description='Image topic for viewer')
+    
+    # Environment setup for custom libusb
+    env_vars = {
+        'LD_LIBRARY_PATH': '/opt/mvIMPACT_acquire_libusb:' + os.environ.get('LD_LIBRARY_PATH', '')
+    }
+    
+    # Main bluefox2 camera node
+    bluefox2_node = Node(
+        package='bluefox2',
+        executable='bluefox2_single_node',  # Assuming the nodelet is converted to a regular node
+        name=LaunchConfiguration('camera'),
+        namespace='',
+        output=LaunchConfiguration('output'),
+        respawn=False,
+        additional_env=env_vars,
+        parameters=[{
+            'identifier': LaunchConfiguration('device'),
+            'frame_id': LaunchConfiguration('frame_id'),
+            'camera_name': LaunchConfiguration('camera_name'),
+            'calib_url': LaunchConfiguration('calib_url'),
+            'fps': LaunchConfiguration('fps'),
+            'idpf': LaunchConfiguration('idpf'),
+            'aec': LaunchConfiguration('aec'),
+            'expose_us': LaunchConfiguration('expose_us'),
+            'agc': LaunchConfiguration('aec'),  # Note: This was 'aec' in original, might be a typo
+            'gain_db': LaunchConfiguration('gain_db'),
+            'cbm': LaunchConfiguration('cbm'),
+            'ctm': LaunchConfiguration('ctm'),
+            'dcfm': LaunchConfiguration('dcfm'),
+            'hdr': LaunchConfiguration('hdr'),
+            'wbp': LaunchConfiguration('wbp'),
+            'request': LaunchConfiguration('request'),
+            'mm': LaunchConfiguration('mm'),
+            'expose_upper_limit_us': LaunchConfiguration('expose_upper_limit_us'),
+            'max_expose_jump': LaunchConfiguration('max_expose_jump'),
+            'des_grey_value': LaunchConfiguration('des_grey_value'),
+            'acs': LaunchConfiguration('acs'),
+            'image_raw/compressed/jpeg_quality': LaunchConfiguration('compressed_jpeg_quality'),
+            'image_raw/theora/keyframe_frequency': LaunchConfiguration('theora_keyframe_frequency'),
+            'image_raw/theora/target_bitrate': LaunchConfiguration('theora_target_bitrate'),
+            'image_raw/theora/quality': LaunchConfiguration('theora_quality'),
+            'image_raw/theora/optimize_for': LaunchConfiguration('theora_optimize_for'),
+        }],
+        #prefix="gdb --args"
+        # Add delay using prefix command
+        # prefix=[
+        #     'bash -c "sleep ', LaunchConfiguration('node_start_delay'), '; exec $0 $@"'
+        # ] if LaunchConfiguration('node_start_delay') != '0' else None
+    )
+    
+    # Rectification node (replaces image_proc/rectify nodelet)
+    rectify_node = Node(
+        package='image_proc',
+        executable='rectify_node',
+        name='rectify_mono',
+        namespace=LaunchConfiguration('camera'),
+        condition=IfCondition(LaunchConfiguration('rectify')),
+        remappings=[
+            ('image_mono', 'image_raw'),
+            ('image_rect', 'image_rect_mono'),
+        ]
+    )
+    
+    # Camera viewer node
+    viewer_node = Node(
+        package='image_view',
+        executable='image_view',
+        name='viewer',
+        namespace=LaunchConfiguration('camera'),
+        condition=IfCondition(LaunchConfiguration('view')),
+        output=LaunchConfiguration('output'),
+        arguments=[PythonExpression(['image:=', LaunchConfiguration('image')])]
+    )
+    
+    # Camera calibration node
+    calibration_group = GroupAction(
+        condition=IfCondition(LaunchConfiguration('calib')),
+        actions=[
+            DeclareLaunchArgument('pattern', default_value='chessboard'),
+            DeclareLaunchArgument('num_dist_coeff', default_value='2'),
+            Node(
+                package='camera_calibration',
+                executable='cameracalibrator',
+                name='calibrator',
+                output='screen',
+                arguments=[
+                    '-p', LaunchConfiguration('pattern'),
+                    '-s', LaunchConfiguration('size'),
+                    '-q', LaunchConfiguration('square'),
+                    '-k', LaunchConfiguration('num_dist_coeff'),
+                    PythonExpression(['image:=/', LaunchConfiguration('camera'), '/image_raw']),
+                    PythonExpression(['camera:=/', LaunchConfiguration('camera')])
+                ]
+            )
+        ]
+    )
+    
+    return LaunchDescription([
+        # Declare all arguments
+        declare_node_start_delay,
+        declare_device,
+        declare_camera_name,
+        declare_camera,
+        declare_frame_id,
+        declare_calib_url,
+        declare_fps,
+        declare_aec,
+        declare_des_grey_value,
+        declare_expose_upper_limit_us,
+        declare_max_expose_jump,
+        declare_acs,
+        declare_expose_us,
+        declare_agc,
+        declare_gain_db,
+        declare_wbp,
+        declare_idpf,
+        declare_mm,
+        declare_cbm,
+        declare_ctm,
+        declare_dcfm,
+        declare_hdr,
+        declare_request,
+        declare_compressed_jpeg_quality,
+        declare_theora_keyframe_frequency,
+        declare_theora_target_bitrate,
+        declare_theora_quality,
+        declare_theora_optimize_for,
+        declare_output,
+        declare_rectify,
+        declare_view,
+        declare_calib,
+        declare_size,
+        declare_square,
+        declare_image,
+        
+        # Launch nodes
+        bluefox2_node,
+        rectify_node,
+        viewer_node,
+        calibration_group,
+    ])
