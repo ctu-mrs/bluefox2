@@ -5,6 +5,7 @@
 #include <sensor_msgs/msg/camera_info.hpp>
 #include "bluefox2/Bluefox2DynConfig.h"
 #include "bluefox2/bluefox2_setting.h"
+#include <rclcpp/rclcpp.hpp>
 
 namespace bluefox2 {
 
@@ -39,7 +40,9 @@ class Bluefox2 {
   int EXPOSE_UPPER_LIMIT = 100000;
   
  private:
-  std::string AvailableDevice() const;
+  rclcpp::Logger logger;
+
+  std::vector<std::string> AvailableDevice() const;
 
   bool IsCtmOnDemandSupported() const;
 
