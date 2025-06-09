@@ -2,31 +2,32 @@
 
 import os
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, GroupAction, ExecuteProcess
+from launch.actions import DeclareLaunchArgument, GroupAction, ExecuteProcess, OpaqueFunction
 from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import LaunchConfiguration, EnvironmentVariable, PathJoinSubstitution, TextSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 from launch.substitutions import PythonExpression
 
-
 def generate_launch_description():
+    global identifier
+    
     # Declare launch arguments
     declare_node_start_delay = DeclareLaunchArgument(
         'node_start_delay',
         default_value='0',
         description='Node delay for multiple cameras (driver can crash if run multiple times in the same moment)'
     )
-    
+        
     declare_device = DeclareLaunchArgument(
         'device',
-        default_value=EnvironmentVariable('BLUEFOX', default_value=''),
+        default_value=PythonExpression(['str(', EnvironmentVariable('BLUEFOX', default_value="0"), ')']),
         description='Device serial number (can be found by running bluefox2_list_cameras)'
     )
     
     declare_camera_name = DeclareLaunchArgument(
         'camera_name',
-        default_value=[TextSubstitution(text='mv_'), LaunchConfiguration('device')],
+        default_value=['mv_', LaunchConfiguration('device')],
         description='Camera name (used for node name and topic namespace)'
     )
     
@@ -99,49 +100,59 @@ def generate_launch_description():
         'LD_LIBRARY_PATH': '/opt/mvIMPACT_acquire_libusb:' + os.environ.get('LD_LIBRARY_PATH', '')
     }
     
-    # Main bluefox2 camera node
-    bluefox2_node = Node(
-        package='bluefox2',
-        executable='bluefox2_single_node',  # Assuming the nodelet is converted to a regular node
-        name=LaunchConfiguration('camera'),
-        namespace='',
-        output=LaunchConfiguration('output'),
-        respawn=False,
-        additional_env=env_vars,
-        parameters=[{
-            'identifier': LaunchConfiguration('device'),
-            'frame_id': LaunchConfiguration('frame_id'),
-            'camera_name': LaunchConfiguration('camera_name'),
-            'calib_url': LaunchConfiguration('calib_url'),
-            'fps': LaunchConfiguration('fps'),
-            'idpf': LaunchConfiguration('idpf'),
-            'aec': LaunchConfiguration('aec'),
-            'expose_us': LaunchConfiguration('expose_us'),
-            'agc': LaunchConfiguration('aec'),  # Note: This was 'aec' in original, might be a typo
-            'gain_db': LaunchConfiguration('gain_db'),
-            'cbm': LaunchConfiguration('cbm'),
-            'ctm': LaunchConfiguration('ctm'),
-            'dcfm': LaunchConfiguration('dcfm'),
-            'hdr': LaunchConfiguration('hdr'),
-            'wbp': LaunchConfiguration('wbp'),
-            'request': LaunchConfiguration('request'),
-            'mm': LaunchConfiguration('mm'),
-            'expose_upper_limit_us': LaunchConfiguration('expose_upper_limit_us'),
-            'max_expose_jump': LaunchConfiguration('max_expose_jump'),
-            'des_grey_value': LaunchConfiguration('des_grey_value'),
-            'acs': LaunchConfiguration('acs'),
-            'image_raw/compressed/jpeg_quality': LaunchConfiguration('compressed_jpeg_quality'),
-            'image_raw/theora/keyframe_frequency': LaunchConfiguration('theora_keyframe_frequency'),
-            'image_raw/theora/target_bitrate': LaunchConfiguration('theora_target_bitrate'),
-            'image_raw/theora/quality': LaunchConfiguration('theora_quality'),
-            'image_raw/theora/optimize_for': LaunchConfiguration('theora_optimize_for'),
-        }],
-        #prefix="gdb --args"
-        # Add delay using prefix command
-        # prefix=[
-        #     'bash -c "sleep ', LaunchConfiguration('node_start_delay'), '; exec $0 $@"'
-        # ] if LaunchConfiguration('node_start_delay') != '0' else None
-    )
+    # ========================================================================================================
+    # This is done like this because, the 'identifier' parameters is taken from the environment variable as a
+    # string containing only numbers. ROS2 launch system is always trying to convertit into a integer. So it
+    # is gibing the node integer, although itshould really be a string. We made a workaround here - creating a
+    # Node throught opaque function, which gives us a 'context' object used to extract raw string from the
+    # LaunchConfiguration object (see 'identifier' param).
+    def get_node(context):
+        return [Node(
+            package='bluefox2',
+            executable='bluefox2_single_node',  # Assuming the nodelet is converted to a regular node
+            name=LaunchConfiguration('camera'),
+            namespace='uav1',
+            output=LaunchConfiguration('output'),
+            respawn=False,
+            additional_env=env_vars,
+            parameters=[{
+                'identifier': LaunchConfiguration('device').perform(context),
+                'frame_id': LaunchConfiguration('frame_id'),
+                'camera_name': LaunchConfiguration('camera_name'),
+                'calib_url': LaunchConfiguration('calib_url'),
+                'fps': LaunchConfiguration('fps'),
+                'idpf': LaunchConfiguration('idpf'),
+                'aec': LaunchConfiguration('aec'),
+                'expose_us': LaunchConfiguration('expose_us'),
+                'agc': LaunchConfiguration('aec'),  # Note: This was 'aec' in original, might be a typo
+                'gain_db': LaunchConfiguration('gain_db'),
+                'cbm': LaunchConfiguration('cbm'),
+                'ctm': LaunchConfiguration('ctm'),
+                'dcfm': LaunchConfiguration('dcfm'),
+                'hdr': LaunchConfiguration('hdr'),
+                'wbp': LaunchConfiguration('wbp'),
+                'request': LaunchConfiguration('request'),
+                'mm': LaunchConfiguration('mm'),
+                'expose_upper_limit_us': LaunchConfiguration('expose_upper_limit_us'),
+                'max_expose_jump': LaunchConfiguration('max_expose_jump'),
+                'des_grey_value': LaunchConfiguration('des_grey_value'),
+                'acs': LaunchConfiguration('acs'),
+                'image_raw/compressed/jpeg_quality': LaunchConfiguration('compressed_jpeg_quality'),
+                'image_raw/theora/keyframe_frequency': LaunchConfiguration('theora_keyframe_frequency'),
+                'image_raw/theora/target_bitrate': LaunchConfiguration('theora_target_bitrate'),
+                'image_raw/theora/quality': LaunchConfiguration('theora_quality'),
+                'image_raw/theora/optimize_for': LaunchConfiguration('theora_optimize_for'),
+            }],
+            #prefix="gdb --args"
+            # Add delay using prefix command
+            # prefix=[
+            #     'bash -c "sleep ', LaunchConfiguration('node_start_delay'), '; exec $0 $@"'
+            # ] if LaunchConfiguration('node_start_delay') != '0' else None
+        )]
+    
+    bluefox2_node = OpaqueFunction(function=get_node)
+    print("bluefox2_node: ", bluefox2_node)
+    # ========================================================================================================
     
     # Rectification node (replaces image_proc/rectify nodelet)
     rectify_node = Node(

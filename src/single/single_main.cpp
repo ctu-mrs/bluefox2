@@ -76,7 +76,7 @@ int main(int argc, char * argv[])
     nh->declare_parameter<std::string>("calib_url", "");
     nh->declare_parameter<std::string>("camera_name", "");
     nh->declare_parameter<std::string>("frame_id", "");
-    nh->declare_parameter<int>("identifier", 0);
+    nh->declare_parameter<std::string>("identifier", "");
     nh->declare_parameter<int>("mm", 0);
 
     bluefox2::SingleNode single_node(nh);
