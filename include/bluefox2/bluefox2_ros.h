@@ -2,7 +2,7 @@
 #define BLUEFOX2_ROS_H_
 
 #include "bluefox2/bluefox2.h"
-#include "camera_base/camera_ros_base.h"
+#include "bluefox2/camera_ros_base.h"
 
 namespace bluefox2 {
 
