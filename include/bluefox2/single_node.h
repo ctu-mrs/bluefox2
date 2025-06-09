@@ -2,7 +2,7 @@
 #define BLUEFOX2_SINGLE_NODE_H_
 
 #include "bluefox2/Bluefox2DynConfig.h"
-#include <camera_base/camera_node_base.h>
+#include <bluefox2/camera_node_base.h>
 #include <std_msgs/msg/int32.hpp>
 #include <std_msgs/msg/float32.hpp>
 
