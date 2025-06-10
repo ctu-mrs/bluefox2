@@ -11,13 +11,7 @@ MY_PATH=`( cd "$MY_PATH" && pwd )`
 
 DOWNLOAD_LINK="http://assets-2.balluff.com/mvIMPACT_Acquire"
 #VERSION="2.34.0"
-#VERSION="3.5.1"
-#VERSION="2.5.0"
-#VERSION="2.4.0"
-#VERSION="2.35.0"
-#VERSION="2.36.0"
 VERSION="2.48.0"
-#VERSION="3.0.0"
 
 echo "$0: Installing Bluefox SDK"
 
