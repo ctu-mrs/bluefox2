@@ -1,6 +1,21 @@
 cmake_minimum_required(VERSION 3.8)
 project(bluefox2)
 
+# ==========================================================================
+# mvIMPACT library installation
+
+# Run the install script during CMake configure step
+execute_process(
+    COMMAND sudo bash ${CMAKE_CURRENT_SOURCE_DIR}/install/install.sh
+    RESULT_VARIABLE install_result
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+if(NOT install_result EQUAL 0)
+    message(FATAL_ERROR "Failed to run install script")
+endif()
+# ==========================================================================
+
 # Default to C++17
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
