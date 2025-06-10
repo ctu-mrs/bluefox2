@@ -4,15 +4,42 @@ project(bluefox2)
 # ==========================================================================
 # mvIMPACT library installation
 
-# Run the install script during CMake configure step
+# # Run the install script during CMake configure step
+# execute_process(
+#     COMMAND sudo bash ${CMAKE_CURRENT_SOURCE_DIR}/install/install.sh
+#     RESULT_VARIABLE install_result
+#     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+# )
+
+# if(NOT install_result EQUAL 0)
+#     message(FATAL_ERROR "Failed to run install script")
+# endif()
+# Your existing install script execution
 execute_process(
     COMMAND sudo bash ${CMAKE_CURRENT_SOURCE_DIR}/install/install.sh
     RESULT_VARIABLE install_result
+    OUTPUT_VARIABLE install_output
+    ERROR_VARIABLE install_error
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-if(NOT install_result EQUAL 0)
-    message(FATAL_ERROR "Failed to run install script")
+# Add dpkg info for the custom library
+execute_process(
+    COMMAND sudo mkdir -p /var/lib/dpkg/info
+    RESULT_VARIABLE mkdir_result
+)
+
+execute_process(
+    COMMAND sudo bash -c "echo 'libmvdevicemanager2 2.0 mvimpact-acquire (>= 2.0)' > /var/lib/dpkg/info/mvimpact-acquire.shlibs"
+    RESULT_VARIABLE shlibs_result
+)
+
+message(STATUS "Created dpkg library info - result: ${shlibs_result}")
+
+if(install_result EQUAL 0 AND shlibs_result EQUAL 0)
+    message(STATUS "Installation and dpkg setup completed successfully")
+else()
+    message(FATAL_ERROR "Installation failed - install: ${install_result}, dpkg: ${shlibs_result}")
 endif()
 # ==========================================================================
 
