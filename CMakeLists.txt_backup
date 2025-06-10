@@ -1,18 +1,92 @@
 cmake_minimum_required(VERSION 3.8)
 project(bluefox2)
 
+# # ==========================================================================
+# # mvIMPACT library installation
+
+# # # Run the install script during CMake configure step
+# # execute_process(
+# #     COMMAND sudo bash ${CMAKE_CURRENT_SOURCE_DIR}/install/install.sh
+# #     RESULT_VARIABLE install_result
+# #     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+# # )
+
+# # if(NOT install_result EQUAL 0)
+# #     message(FATAL_ERROR "Failed to run install script")
+# # endif()
+
+# # Your existing install script execution
+# execute_process(
+#     COMMAND sudo bash ${CMAKE_CURRENT_SOURCE_DIR}/install/install.sh
+#     RESULT_VARIABLE install_result
+#     OUTPUT_VARIABLE install_output
+#     ERROR_VARIABLE install_error
+#     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+# )
+
+# # Add dpkg info for the custom library
+# execute_process(
+#     COMMAND sudo mkdir -p /var/lib/dpkg/info
+#     RESULT_VARIABLE mkdir_result
+# )
+
+# execute_process(
+#     COMMAND sudo bash -c "echo 'libmvdevicemanager2 2.0 mvimpact-acquire (>= 2.0)' > /var/lib/dpkg/info/mvimpact-acquire.shlibs"
+#     RESULT_VARIABLE shlibs_result
+# )
+
+# message(STATUS "Created dpkg library info - result: ${shlibs_result}")
+
+# if(install_result EQUAL 0 AND shlibs_result EQUAL 0)
+#     message(STATUS "Installation and dpkg setup completed successfully")
+# else()
+#     message(FATAL_ERROR "Installation failed - install: ${install_result}, dpkg: ${shlibs_result}")
+# endif()
+
+
+# Install the .deb package during configure
+# execute_process(
+#     COMMAND sudo dpkg -i ${CMAKE_CURRENT_SOURCE_DIR}/deps/mvimpact-acquire_2.48.0-1_amd64.deb
+#     # RESULT_VARIABLE install_result
+#     # OUTPUT_VARIABLE install_output
+#     # ERROR_VARIABLE install_error
+# )
+
+# if(NOT install_result EQUAL 0)
+#     message(STATUS "dpkg install output: ${install_output}")
+#     message(STATUS "dpkg install error: ${install_error}")
+    
+#     # Try to fix dependency issues
+#     execute_process(
+#         COMMAND sudo apt-get install -f -y
+#         RESULT_VARIABLE fix_result
+#     )
+    
+#     if(NOT fix_result EQUAL 0)
+#         message(FATAL_ERROR "Failed to install mvimpact-acquire package")
+#     endif()
+# endif()
+
+# message(STATUS "mvIMPACT Acquire package installed successfully")
+
+
+# # ==========================================================================
+
 # Default to C++17
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
   set(CMAKE_CXX_STANDARD_REQUIRED ON)
 endif()
 
+# if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+#   add_compile_options(-Wall -Wextra -Wpedantic)
+# endif()
+
 # find dependencies
 find_package(ament_cmake REQUIRED)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 
-# Remove this line:
-# find_package(mvIMPACT REQUIRED)
-
+#find_package(mvIMPACT REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -29,10 +103,12 @@ find_package(rcl_interfaces REQUIRED)
 set(LOCAL_MVIMPACT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/install/x86_64/mvIMPACT_acquire-x86_64-2.48.0")
 set(LOCAL_MVIMPACT_LIB_DIR "${LOCAL_MVIMPACT_DIR}/lib/x86_64")
 
-# Set include directories
+# Only include custom directories
 include_directories(
   include
-  ${LOCAL_MVIMPACT_DIR}  # Your local includes
+  #${mvIMPACT_INCLUDE_DIRS}
+  #install/x86_64/mvIMPACT_acquire-x86_64-2.48.0
+  ${LOCAL_MVIMPACT_DIR}
 )
 
 # Define local libraries explicitly
@@ -66,11 +142,7 @@ add_library(${PROJECT_NAME}
     src/single/single_node.cpp
 )
 
-# Replace ${mvIMPACT_LIBRARIES} with your local libraries
-target_link_libraries(${PROJECT_NAME} 
-  ${LOCAL_MVIMPACT_LIBRARIES}
-  ${LOCAL_TOOLKIT_LIBRARIES}
-)
+target_link_libraries(${PROJECT_NAME} ${mvIMPACT_LIBRARIES})
 
 ament_target_dependencies(${PROJECT_NAME} 
   sensor_msgs 
@@ -99,35 +171,6 @@ ament_target_dependencies(${PROJECT_NAME}_single_node
   image_transport
   camera_info_manager
 )
-
-# Use ament_cmake to handle RPATH automatically
-# This is the cleanest ROS2 way - no manual RPATH needed
-
-# Alternative: Let ament handle RPATH for bundled libraries
-# Only needed if the above doesn't work
-# set_target_properties(${PROJECT_NAME} ${PROJECT_NAME}_single_node PROPERTIES
-#   INSTALL_RPATH_USE_LINK_PATH TRUE
-# )
-
-# Install the local libraries with your package - ROS2 way
-install(DIRECTORY ${LOCAL_MVIMPACT_LIB_DIR}/
-  DESTINATION lib
-  FILES_MATCHING PATTERN "*.so*"
-)
-
-# Install toolkit libraries - ROS2 way  
-install(FILES 
-  ${LOCAL_MVIMPACT_DIR}/Toolkits/expat/bin/x86_64/lib/libexpat.so.0.5.0
-  ${LOCAL_MVIMPACT_DIR}/Toolkits/FreeImage3160/bin/Release/FreeImage/x86_64/libfreeimage-3.16.0.so
-  DESTINATION lib
-)
-
-# Create symbolic link for libexpat
-install(CODE "
-  execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
-    libexpat.so.0.5.0 
-    \${CMAKE_INSTALL_PREFIX}/lib/libexpat.so.0)
-")
 
 # Install library
 install(TARGETS ${PROJECT_NAME}
@@ -161,7 +204,7 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/config)
   )
 endif()
 
-# Export dependencies and libraries for ROS2
+# Export dependencies
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 ament_export_dependencies(
   sensor_msgs
@@ -177,15 +220,5 @@ ament_export_dependencies(
   rcl_interfaces
 )
 ament_export_include_directories(include)
-
-# Export the bundled libraries so other packages can find them
-ament_export_libraries(
-  mvDeviceManager
-  mvBlueFOX  
-  mvPropHandling
-  mvImageProcessing
-  expat
-  freeimage-3.16.0
-)
 
 ament_package()
