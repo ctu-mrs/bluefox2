@@ -122,12 +122,12 @@ install(FILES
   DESTINATION lib
 )
 
-# Create symbolic link for libexpat
-install(CODE "
-  execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
-    libexpat.so.0.5.0 
-    \${CMAKE_INSTALL_PREFIX}/lib/libexpat.so.0)
-")
+# # Create symbolic link for libexpat
+# install(CODE "
+#   execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
+#     libexpat.so.0.5.0 
+#     \${CMAKE_INSTALL_PREFIX}/lib/libexpat.so.0)
+# ")
 
 # Install library
 install(TARGETS ${PROJECT_NAME}
