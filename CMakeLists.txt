@@ -122,6 +122,10 @@ install(FILES
   DESTINATION lib
 )
 
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/install/x86_64/mvIMPACT_acquire-x86_64-2.48.0/Toolkits/expat/bin/x86_64/lib/libexpat.so.0.5.0 
+        DESTINATION lib 
+        RENAME libexpat.so.0)
+
 # # Create symbolic link for libexpat
 # install(CODE "
 #   execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink 
