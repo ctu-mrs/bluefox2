@@ -18,7 +18,7 @@
   <depend>image_transport</depend>
   <depend>diagnostic_updater</depend>
   <depend>rcl_interfaces</depend>
-  <depend>mvimpact-acquire</depend>
+  <run_depend>mvimpact-acquire</run_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
