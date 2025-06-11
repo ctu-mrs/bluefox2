@@ -1,19 +1,19 @@
 cmake_minimum_required(VERSION 3.8)
 project(bluefox2)
 
-# Check if building for ARM architecture
-if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm|aarch64|ARM64|armv7l)")
-    message(STATUS "Skipping build for ARM architecture (${CMAKE_SYSTEM_PROCESSOR})")
+# # Check if building for ARM architecture
+# if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm|aarch64|ARM64|armv7l)")
+#     message(STATUS "Skipping build for ARM architecture (${CMAKE_SYSTEM_PROCESSOR})")
     
-    # Find required ROS2 dependencies to satisfy colcon
-    find_package(ament_cmake REQUIRED)
+#     # Find required ROS2 dependencies to satisfy colcon
+#     find_package(ament_cmake REQUIRED)
     
-    # Create a minimal successful package
-    ament_package()
+#     # Create a minimal successful package
+#     ament_package()
     
-    # Exit early - don't process the rest
-    return()
-endif()
+#     # Exit early - don't process the rest
+#     return()
+# endif()
 
 # Default to C++17
 if(NOT CMAKE_CXX_STANDARD)
@@ -71,6 +71,20 @@ if(BUILD_TESTING)
   set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
+
+add_executable(${PROJECT_NAME}_list_cameras src/list_cameras.cpp)
+target_link_libraries(${PROJECT_NAME}_list_cameras
+  ${LOCAL_MVIMPACT_LIBRARIES}
+  ${LOCAL_TOOLKIT_LIBRARIES}
+)
+install(TARGETS ${PROJECT_NAME}_list_cameras DESTINATION lib/${PROJECT_NAME})
+
+add_executable(${PROJECT_NAME}_list_cameras_human_readable src/list_cameras_hr.cpp)
+target_link_libraries(${PROJECT_NAME}_list_cameras_human_readable
+  ${LOCAL_MVIMPACT_LIBRARIES}
+  ${LOCAL_TOOLKIT_LIBRARIES}
+)
+install(TARGETS ${PROJECT_NAME}_list_cameras_human_readable DESTINATION lib/${PROJECT_NAME})
 
 # Create library
 add_library(${PROJECT_NAME}

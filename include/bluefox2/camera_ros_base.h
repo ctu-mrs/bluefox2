@@ -106,8 +106,6 @@ class CameraRosBase {
       cinfo_msg->header = image_msg->header;
       camera_pub_.publish(*image_msg, *cinfo_msg);
       //topic_diagnostic_->tick(image_msg->header.stamp);
-
-      RCLCPP_INFO(node_->get_logger(), "width: %d, height: %d", image_msg->width, image_msg->height);
     }
     else{
       RCLCPP_ERROR(node_->get_logger(), "Error: could not grab frame");
