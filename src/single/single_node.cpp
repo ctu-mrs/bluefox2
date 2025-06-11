@@ -29,7 +29,6 @@ SingleNode::SingleNode(const rclcpp::Node::SharedPtr pnh)
 void SingleNode::Acquire()
 {
   while (is_acquire() && rclcpp::ok()) {
-    RCLCPP_INFO(nh->get_logger(), "frame");
     std::chrono::steady_clock::time_point now =
         std::chrono::steady_clock::now();
     bluefox2_ros_->RequestSingle();

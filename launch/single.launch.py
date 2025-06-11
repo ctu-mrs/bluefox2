@@ -8,6 +8,19 @@ from launch.substitutions import LaunchConfiguration, EnvironmentVariable, PathJ
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 from launch.substitutions import PythonExpression
+from launch.actions import LogInfo
+import subprocess
+import sys
+
+def get_available_cameras():
+    # You could call your list_cameras executable here
+    # For now, this is a placeholder
+    try:
+        result = subprocess.run(['ros2', 'run', 'bluefox2', 'bluefox2_list_cameras'], 
+                              capture_output=True, text=True)
+        return result.stdout
+    except:
+        return []
 
 def generate_launch_description():
     global identifier
@@ -18,10 +31,16 @@ def generate_launch_description():
         default_value='0',
         description='Node delay for multiple cameras (driver can crash if run multiple times in the same moment)'
     )
+    
+    devices = get_available_cameras().split(" ")[0:-1]
+    selected_device = "0"
+    if len(devices):
+        selected_device = devices[0]
+        devices_search_log = LogInfo(msg=f"Found devices: {devices}. Selecting first device with serial number {selected_device}")        
         
     declare_device = DeclareLaunchArgument(
         'device',
-        default_value=PythonExpression(['str(', EnvironmentVariable('BLUEFOX', default_value="0"), ')']),
+        default_value=PythonExpression(['str(', EnvironmentVariable('BLUEFOX', default_value=selected_device), ')']),
         description='Device serial number (can be found by running bluefox2_list_cameras)'
     )
     
@@ -203,6 +222,7 @@ def generate_launch_description():
     
     return LaunchDescription([
         # Declare all arguments
+        devices_search_log,
         declare_node_start_delay,
         declare_device,
         declare_camera_name,
