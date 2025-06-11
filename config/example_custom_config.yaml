@@ -1,0 +1,7 @@
+/uav1/mv_26808027:
+  ros__parameters:
+    fps: 60
+    des_grey_value: 50
+    remappings:
+      '/uav1/mv_26808027/image_raw': /uav1/mv_26808027/image_as_raw_as_possible
+      '/uav1/mv_26808027/image_raw/compressed': /uav1/mv_26808027/image_raw/very_compressed
