@@ -2,15 +2,14 @@
 
 import os
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, GroupAction, ExecuteProcess, OpaqueFunction
-from launch.conditions import IfCondition, UnlessCondition
-from launch.substitutions import LaunchConfiguration, EnvironmentVariable, PathJoinSubstitution, TextSubstitution
+from launch.actions import DeclareLaunchArgument, GroupAction, OpaqueFunction
+from launch.conditions import IfCondition
+from launch.substitutions import LaunchConfiguration, EnvironmentVariable
 from launch_ros.actions import Node
-from launch_ros.substitutions import FindPackageShare
 from launch.substitutions import PythonExpression
 from launch.actions import LogInfo
 import subprocess
-import sys
+import yaml
 
 def get_available_cameras():
     # You could call your list_cameras executable here
@@ -23,7 +22,11 @@ def get_available_cameras():
         return []
 
 def generate_launch_description():
-    global identifier
+    declare_custom_config = DeclareLaunchArgument(
+        'custom_config',
+        default_value='',
+        description='config from the user'
+    )
     
     # Declare launch arguments
     declare_node_start_delay = DeclareLaunchArgument(
@@ -32,16 +35,24 @@ def generate_launch_description():
         description='Node delay for multiple cameras (driver can crash if run multiple times in the same moment)'
     )
     
+    # Devices listing utility returns camera serial numbers divided by space. The last character is newline, so it is thrown away with '-1' indexing.
     devices = get_available_cameras().split(" ")[0:-1]
     selected_device = "0"
     if len(devices):
         selected_device = devices[0]
-        devices_search_log = LogInfo(msg=f"Found devices: {devices}. Selecting first device with serial number {selected_device}")        
+        devices_search_log = LogInfo(msg=f"Found Bluefox2 devices: {devices}. Selecting first device with serial number {selected_device}")
+    else:
+        devices_search_log = LogInfo(msg="No Bluefox2 devices found.")
         
     declare_device = DeclareLaunchArgument(
         'device',
         default_value=PythonExpression(['str(', EnvironmentVariable('BLUEFOX', default_value=selected_device), ')']),
         description='Device serial number (can be found by running bluefox2_list_cameras)'
+    )
+    
+    declare_camera_namespace = DeclareLaunchArgument(
+        'camera_namespace',
+        description='Camera namespace (used for node name and topic namespace)'
     )
     
     declare_camera_name = DeclareLaunchArgument(
@@ -126,11 +137,29 @@ def generate_launch_description():
     # Node throught opaque function, which gives us a 'context' object used to extract raw string from the
     # LaunchConfiguration object (see 'identifier' param).
     def get_node(context):
+        _custom_config_file = LaunchConfiguration('custom_config').perform(context)
+        prefix = f"/{LaunchConfiguration('camera_namespace').perform(context)}/{LaunchConfiguration('camera_name').perform(context)}"
+        remappings = []
+        
+        # pull remapping of the topics out of the yaml file
+        if _custom_config_file != '':
+            with open(_custom_config_file, 'r') as f:
+                yaml_data = yaml.load(f, Loader=yaml.FullLoader)
+
+                if prefix in yaml_data and 'remappings' in yaml_data[prefix]['ros__parameters']:
+                    remappings_subyaml = yaml_data[prefix]['ros__parameters']['remappings']
+                    for orig_name in remappings_subyaml:
+                        new_name = remappings_subyaml[orig_name]
+                        print(f"remapping topic {orig_name} to {new_name}")
+                        remappings.append((orig_name, new_name))
+
+        print("remappings: ", remappings)
+        
         return [Node(
             package='bluefox2',
             executable='bluefox2_single_node',  # Assuming the nodelet is converted to a regular node
-            name=LaunchConfiguration('camera'),
-            namespace='uav1',
+            #name=LaunchConfiguration('camera'),    # This is commented out because with it, the node name looked like "/uav1/mv_26808027/mv_26808027". Without it it looks like "/uav1/mv_26808027/bluefox2_single".
+            namespace=prefix,
             output=LaunchConfiguration('output'),
             respawn=False,
             additional_env=env_vars,
@@ -161,7 +190,8 @@ def generate_launch_description():
                 'image_raw/theora/target_bitrate': LaunchConfiguration('theora_target_bitrate'),
                 'image_raw/theora/quality': LaunchConfiguration('theora_quality'),
                 'image_raw/theora/optimize_for': LaunchConfiguration('theora_optimize_for'),
-            }],
+            }, _custom_config_file ],
+            remappings=remappings
             #prefix="gdb --args"
             # Add delay using prefix command
             # prefix=[
@@ -222,9 +252,11 @@ def generate_launch_description():
     
     return LaunchDescription([
         # Declare all arguments
+        declare_custom_config,
         devices_search_log,
         declare_node_start_delay,
         declare_device,
+        declare_camera_namespace,
         declare_camera_name,
         declare_camera,
         declare_frame_id,
