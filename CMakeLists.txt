@@ -1,6 +1,20 @@
 cmake_minimum_required(VERSION 3.8)
 project(bluefox2)
 
+# Check if building for ARM architecture
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm|aarch64|ARM64|armv7l)")
+    message(STATUS "Skipping build for ARM architecture (${CMAKE_SYSTEM_PROCESSOR})")
+    
+    # Find required ROS2 dependencies to satisfy colcon
+    find_package(ament_cmake REQUIRED)
+    
+    # Create a minimal successful package
+    ament_package()
+    
+    # Exit early - don't process the rest
+    return()
+endif()
+
 # Default to C++17
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
