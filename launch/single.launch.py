@@ -52,6 +52,7 @@ def generate_launch_description():
     
     declare_camera_namespace = DeclareLaunchArgument(
         'camera_namespace',
+        default_value=EnvironmentVariable('UAV_NAME'),
         description='Camera namespace (used for node name and topic namespace)'
     )
     
