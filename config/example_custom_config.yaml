@@ -1,4 +1,4 @@
-/uav1/mv_26808027:
+/uav1/mv_26808027/bluefox2_single:
   ros__parameters:
     fps: 60
     des_grey_value: 50

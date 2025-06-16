@@ -139,7 +139,7 @@ def generate_launch_description():
     # LaunchConfiguration object (see 'identifier' param).
     def get_node(context):
         _custom_config_file = LaunchConfiguration('custom_config').perform(context)
-        prefix = f"/{LaunchConfiguration('camera_namespace').perform(context)}/{LaunchConfiguration('camera_name').perform(context)}"
+        prefix = f"/{LaunchConfiguration('camera_namespace').perform(context)}/{LaunchConfiguration('camera_name').perform(context)}/bluefox2_single"
         remappings = []
         
         # pull remapping of the topics out of the yaml file
