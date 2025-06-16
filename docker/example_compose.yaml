@@ -1,0 +1,21 @@
+services:
+  realsense:
+    image: ctumrs/bluefox2:unstable
+    #build: .
+    privileged: true
+    network_mode: "host"
+    configs:
+      - source: cfg_yaml
+        target: /custom_config.yaml
+        mode: 0444  # read-only permissions
+    command: custom_config:=/custom_config.yaml
+    environment:
+      - UAV_NAME=drona_xyz
+
+configs:
+  cfg_yaml:
+    content: |
+      /drona_xyz/mv_26808027:
+        ros__parameters:
+          remappings:
+            '/drona_xyz/mv_26808027/image_raw/compressed': /drona_xyz/mv_26808027/image_raw/VERY_compressed
