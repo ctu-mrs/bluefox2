@@ -22,6 +22,12 @@ def get_available_cameras():
         return []
 
 def generate_launch_description():
+    declare_use_camera_name = DeclareLaunchArgument(
+        'use_camera_name',
+        default_value=EnvironmentVariable('USE_CAMERA_NAME', default_value="false"),
+        description='Defines whether the node should use camera name with serial number in it. It may be not very practical when only one camera is used. User has to know camera serial number to use proper namespace when definning parameters.'
+    )
+    
     declare_custom_config = DeclareLaunchArgument(
         'custom_config',
         default_value='',
@@ -139,7 +145,10 @@ def generate_launch_description():
     # LaunchConfiguration object (see 'identifier' param).
     def get_node(context):
         _custom_config_file = LaunchConfiguration('custom_config').perform(context)
-        prefix = f"/{LaunchConfiguration('camera_namespace').perform(context)}/{LaunchConfiguration('camera_name').perform(context)}/bluefox2_single"
+        if LaunchConfiguration("use_camera_name").perform(context) == "true":
+            prefix = f"/{LaunchConfiguration('camera_namespace').perform(context)}/{LaunchConfiguration('camera_name').perform(context)}/bluefox2_single"
+        else:
+            prefix = f"/{LaunchConfiguration('camera_namespace').perform(context)}/bluefox2_single"
         remappings = []
         
         # pull remapping of the topics out of the yaml file
@@ -156,7 +165,10 @@ def generate_launch_description():
 
         print("remappings: ", remappings)
         # Real prefix, without the "bluefox2_single" at the end ("bluefox2_single" that will be appended by the node itself).
-        real_prefix = f"/{LaunchConfiguration('camera_namespace').perform(context)}/{LaunchConfiguration('camera_name').perform(context)}"
+        if LaunchConfiguration("use_camera_name").perform(context) == "true":
+            real_prefix = f"/{LaunchConfiguration('camera_namespace').perform(context)}/{LaunchConfiguration('camera_name').perform(context)}"
+        else:
+            real_prefix = f"/{LaunchConfiguration('camera_namespace').perform(context)}"
         
         return [Node(
             package='bluefox2',
@@ -255,6 +267,7 @@ def generate_launch_description():
     
     return LaunchDescription([
         # Declare all arguments
+        declare_use_camera_name,
         devices_search_log,
         declare_custom_config,
         declare_node_start_delay,
