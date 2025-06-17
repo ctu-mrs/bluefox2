@@ -3,7 +3,7 @@
 | Build status | [![Build Status](https://github.com/ctu-mrs/bluefox2/workflows/Noetic/badge.svg)](https://github.com/ctu-mrs/bluefox2/actions) |
 |--------------|--------------------------------------------------------------------------------------------------------------------------------|
 
-*This driver depends on package [`camera_base`](https://github.com/KumarRobotics/camera_base)*
+~~*This driver depends on package [`camera_base`](https://github.com/KumarRobotics/camera_base)*~~ it is header-only package - it was moved into the package, so it is not dependecy anymore.
 
 https://github.com/KumarRobotics/bluefox2
 
@@ -14,66 +14,88 @@ https://github.com/KumarRobotics/bluefox2
 ## Supported hardware
 This driver should work with any Matrix-Vision Bluefox usb2.0 MLC cameras (bluefox2).
 
+Note: Driver binaries were moved to the package and are installed with it, so there is no need to install it separately. If there is a need to update those libraries, you have to manually update driver binary files in the package and commit it. Finding the binaries and loading them during node start/launch is left as responsibility of the ROS2 packaging system.
+
 ## Finding camera serial number
-Run `rosrun bluefox2 bluefox2_list_cameras` to list info about all connected cameras.
+Run `ros2 run bluefox2 bluefox2_list_cameras` to list info about all connected cameras. This is designed to be machine readable and is used in the launchfile to automatically select first found camera, so the user does not have to do that manually (although user can specify specific camera if he wants to).
+
+You can also run `ros2 run bluefox2 bluefox2_list_cameras_human_readable` to see more detailes.
 
 ## API Stability
 The ROS API of this driver should be considered **unstable**.
 
 ## ROS API
 
-### Single nodelet
+### Single node
 
-- `single_nodelet.launch` is a nodelet for a single bluefox2 camera.
+- `single.launch.py` is a node launch file for a single bluefox2 camera.
 - Can be included in custom launch files.
 
 ### Example
 
-- `example.lauch` is an example of how to include `single_nodelet.launch` in custom launch files.
+- `example.lauch` is an example of how to include `single_nodelet.launch` in custom launch files. (TODO: check in the ROS1 package version and possibly move it here)
 
 #### Published topics
 
-`~image_raw` ([sensor_msgs/Image](http://docs.ros.org/api/sensor_msgs/html/msg/Image.html))
+- `~image_raw` ([sensor_msgs/msg/Image](https://docs.ros.org/en/ros2_packages/jazzy/api/sensor_msgs/msg/Image.html))
 
-The unprocessed image data.
+    The unprocessed image data.
 
-`~camera_info` ([sensor_msgs/CameraInfo](http://docs.ros.org/api/sensor_msgs/html/msg/CameraInfo.html))
+- `~camera_info` ([sensor_msgs/msg/CameraInfo](https://docs.ros.org/en/ros2_packages/jazzy/api/sensor_msgs/msg/CameraInfo.html))
 
-Contains the camera calibration (if calibrated) and extra data about the camera configuration.
+    Contains the camera calibration (if calibrated) and extra data about the camera configuration.
 
 #### Parameters
 
 **Common interface**
 
-`~device` (`string`)
+- `~fps` (`integer`)
 
-The device serial id.
+    The desired frame rate of the camera.
 
-`~fps` (`double`)
+**Node parameters**
 
-The desired frame rate of the camera.
+- `~identifier` (`string`)
 
-**Normal parameters**
+    Serial number of the chosen camera. It has to be explicitly provided as string, otherwise ROS2 api will automatically convert it into an integer, which results in non-matching types error message from the node. Example:
 
-`~camera_name` (`string`, default: `mv_<serial>`)
+        ros2 run bluefox2 bluefox2_single_node --ros-args --param identifier:="'26808027'" --param frame_id:=mv_26808027
 
-Camera name used by `camera_info_manager` for loading calibration file, should be the same as the name in `mv_<serial>.yaml`.
+    If you are running it directly, like in this example, you also have to define `frame_id` parameter. Otherwise the `frame_id` in the image message header will be empty. When you run it through launch file, then the frame id will always be set and will have form `mv_<serial>`.
 
-`~camera` (`string`, default: `<camera_name>`)
+- `~camera_name` (`string`, default: ``)
 
-Name of the node.
+    Camera name used by `camera_info_manager` for loading calibration file, should be the same as the name in `mv_<serial>.yaml`.
 
-`~frame_id` (`string`, default: `<camera>`)
+- `~camera` (`string`, default: `<camera_name>`)
 
-frame id of the published topics.
+    Name of the node.
 
-`~calib_url` (`string`)
+- `~frame_id` (`string`, default: `<camera>`)
 
-camera calibration URL.
+    frame id of the published topics.
+
+- `~calib_url` (`string`)
+
+    camera calibration URL.
+
+**Lauchfile parameteres**
+
+- `camera_namespace` (`string`, default: `UAV_NAME` environment variable)
+
+    Camera namespace used to distinguish topics between different drones (they are going to have different serial numbers anyway, so this is more of a human readability improvement).
+
+    Note: Node namespace will be in the form `/<camera_namespace>/<camera_name>/bluefox2_single`. Specific example: `/uav1/mv_26808027/bluefox2_single`. When running from launchfile, `UAV_NAME` environment variable must be set (otherwise, error is thrown and the node stops).
+
+- `device` (`string`)
+
+    The device serial id. It is initialized either from the environment variable `BLUEFOX` if defined, as the first device discovered by the `bluefox2_list_cameras` utility or manually as an argument to the launchfile.
 
 **Dynamically Reconfigurable Parameters**
 
-See the [dynamic_reconfigure](http://wiki.ros.org/dynamic_reconfigure) package for details on dynamically reconfigurable parameters.
+This was deleted during migration. We do not expect to need it. If you need it, feel free to implement it.
+
+<!--See the [dynamic_reconfigure](http://wiki.ros.org/dynamic_reconfigure) package for details on dynamically reconfigurable parameters.
 
 white balance parameter:
 
@@ -111,18 +133,31 @@ Read this [article](http://www.matrix-vision.com/faq-reader/245.html) as well.
 
 Only 200wG camera supports this mode, set `hdr` to `true` for other cameras will have no effect.
 
-This mode is required when high fps desired which allows 200wG to work at 90 fps and 200bG at 24 fps (with `ctm = 1`). Using this will result in imprecise time stamp of captured image. Use with caution.
+This mode is required when high fps desired which allows 200wG to work at 90 fps and 200bG at 24 fps (with `ctm = 1`). Using this will result in imprecise time stamp of captured image. Use with caution. -->
+
+## Custom config
+
+You can provide your custom config file throught ``
 
 ## Hardware sync
 
-Notice that if you are using two 200w cameras, there's no need to use hardware synchronization because software synchronization is supported.
+Code for the two cameras was not migrated, because we do not expect to need it. If you need it, feel free to migrate this part.
+
+<!-- Notice that if you are using two 200w cameras, there's no need to use hardware synchronization because software synchronization is supported.
 
 [Using 2 mvBlueFOX-MLC cameras in Master-Slave mode](http://www.matrix-vision.com/manuals/mvBlueFOX/UseCases_page_0.html#UseCases_section_MasterSlave_Mode)
 
-[Single-board version (mvBlueFOX-MLC2xx)](http://www.matrix-vision.com/manuals/mvBlueFOX/mvBF_page_tech.html#mvBF_subsection_single )
+[Single-board version (mvBlueFOX-MLC2xx)](http://www.matrix-vision.com/manuals/mvBlueFOX/mvBF_page_tech.html#mvBF_subsection_single ) -->
 
 ## [Install mvIMPACT Driver](http://www.matrix-vision.com/manuals/mvBlueFOX/mvBF_page_quickstart.html#mvBF_subsubsection_quickstart_linux_software)
-Run:
+
+There is no need to install the driver anymore. All binary library files and header files of the driver were baked directly into the package and are installed together with the package. This was done primarily because we needed to run this driver in the Docker.
+
+Finding and loading those driver's binary library files is left to the ROS2 system. If you need to update those driver's binary library files and header files, you have to manually download and extract newer ones and add them to the package. There is only one potential problem - libusb library is also packed together with the driver. That could potentially cause conflicts between different versions of libusb library. If you have problem with this, feel free to remove this bundled libusb binary file and use external one.
+
+There was also `wxPropView` viewer gui application available when installed in original way throught install script. Maybe you can still install it if you need it, but we haven't tested this. We use `rqt_image_view` tool instead.
+
+<!-- Run:
 
 ```
 ./install/install.sh
@@ -131,7 +166,7 @@ Run:
 This will install mvIMPACT_Acquire SDK to `/opt`.
 
 ## wxPropView
-If you install the full matrix vision driver, you will have `wxPropView` installed to your system. It's an GUI application that let you inspect all properties of the camera.
+If you install the full matrix vision driver, you will have `wxPropView` installed to your system. It's an GUI application that let you inspect all properties of the camera. -->
 
 ## FAQs
 1. I have the driver locally in my ros package, but every time I plug in a camera, I need to change the permission.
@@ -141,7 +176,9 @@ If you install the full matrix vision driver, you will have `wxPropView` install
         sudo chmod 777 /dev/bus/usb/xxx/xxx
         ```
 
-    `/dev/bus/usb/xxx/xxx` can be easily identified with the error information ros provids.
+        `/dev/bus/usb/xxx/xxx` can be easily identified with the error information ros provids.
+
+        You can also use convenience script `device_permission_change.bash` in the `scripts` subdirectory, which is essentially doing the same thing. It automatically finds bluefox2 device files by it's vendor id and change their permissions. You must run it with a sudo.
 
     * Permanent fix:
     Adding a rule to `/etc/udev/rules.d` by the following command
@@ -151,6 +188,10 @@ If you install the full matrix vision driver, you will have `wxPropView` install
         sudo service udev reload
         ```
 
+        If you want to run the driver in the Docker container, this udev rules installation has to be done on the host system. This is the reason why we created the `device_permission_change.bash` convenience script - you can run it from within the privileged container without the need to set anything on the host system. We emphasize that the **container must be run as privileged for this to work**.
+
 2. Camera acquisition failure after being unplugged and plugged back in
 If you are using linux kernel 3.13.0, then it's likely that you will encounter this problem.
 The solution is to install the latest kernel, eg. > 3.13
+
+## Running in the docker throught portainer.
