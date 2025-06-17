@@ -1,3 +1,7 @@
+# ========================================================================
+# For the case where we want to include camera name in the node namespace
+# ========================================================================
+
 services:
   realsense:
     image: ctumrs/bluefox2:unstable
@@ -20,3 +24,34 @@ configs:
           fps: 25
           remappings:
             '/uav1/mv_26808027/image_raw': /abc
+
+# ========================================================================
+# This is the case when we do not need camera name in the namespace,
+# because we only have one camera on the drone. Definning parameters
+# is easier then, because we do ot have to look up the serial number
+# of the camera.
+# ========================================================================
+
+services:
+  realsense:
+    image: ctumrs/bluefox2:unstable
+    #build: .
+    privileged: true
+    network_mode: "host"
+    configs:
+      - source: cfg_yaml
+        target: /custom_config.yaml
+        mode: 0444  # read-only permissions
+    command: custom_config:=/custom_config.yaml
+    environment:
+      - UAV_NAME=uav1
+      - USE_CAMERA_NAME=false
+
+configs:
+  cfg_yaml:
+    content: |
+      /uav1/bluefox2_single:
+        ros__parameters:
+          fps: 25
+          remappings:
+            '/uav1/image_raw': /abc
