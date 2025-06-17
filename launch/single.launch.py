@@ -34,16 +34,16 @@ def generate_launch_description():
         default_value='0',
         description='Node delay for multiple cameras (driver can crash if run multiple times in the same moment)'
     )
-    
+        
     # Devices listing utility returns camera serial numbers divided by space. The last character is newline, so it is thrown away with '-1' indexing.
     devices = get_available_cameras().split(" ")[0:-1]
-    selected_device = "0"
+    selected_device = ''
     if len(devices):
         selected_device = devices[0]
-        devices_search_log = LogInfo(msg=f"Found Bluefox2 devices: {devices}. Selecting first device with serial number {selected_device}")
+        devices_search_log = LogInfo(msg=f"Found Bluefox2 devices: {devices}. If user does not select particular device, the device wit serial number {selected_device} will be used.")
     else:
         devices_search_log = LogInfo(msg="No Bluefox2 devices found.")
-        
+         
     declare_device = DeclareLaunchArgument(
         'device',
         default_value=PythonExpression(['str(', EnvironmentVariable('BLUEFOX', default_value=selected_device), ')']),
@@ -155,12 +155,14 @@ def generate_launch_description():
                         remappings.append((orig_name, new_name))
 
         print("remappings: ", remappings)
+        # Real prefix, without the "bluefox2_single" at the end ("bluefox2_single" that will be appended by the node itself).
+        real_prefix = f"/{LaunchConfiguration('camera_namespace').perform(context)}/{LaunchConfiguration('camera_name').perform(context)}"
         
         return [Node(
             package='bluefox2',
             executable='bluefox2_single_node',  # Assuming the nodelet is converted to a regular node
             #name=LaunchConfiguration('camera'),    # This is commented out because with it, the node name looked like "/uav1/mv_26808027/mv_26808027". Without it it looks like "/uav1/mv_26808027/bluefox2_single".
-            namespace=prefix,
+            namespace=real_prefix,
             output=LaunchConfiguration('output'),
             respawn=False,
             additional_env=env_vars,
@@ -253,8 +255,8 @@ def generate_launch_description():
     
     return LaunchDescription([
         # Declare all arguments
-        declare_custom_config,
         devices_search_log,
+        declare_custom_config,
         declare_node_start_delay,
         declare_device,
         declare_camera_namespace,

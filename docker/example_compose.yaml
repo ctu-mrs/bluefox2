@@ -10,12 +10,13 @@ services:
         mode: 0444  # read-only permissions
     command: custom_config:=/custom_config.yaml
     environment:
-      - UAV_NAME=drona_xyz
+      - UAV_NAME=uav1
 
 configs:
   cfg_yaml:
     content: |
-      /drona_xyz/mv_26808027:
+      /uav1/mv_26808027/bluefox2_single:
         ros__parameters:
+          fps: 25
           remappings:
-            '/drona_xyz/mv_26808027/image_raw/compressed': /drona_xyz/mv_26808027/image_raw/VERY_compressed
+            '/uav1/mv_26808027/image_raw': /abc
