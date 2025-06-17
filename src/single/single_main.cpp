@@ -1,21 +1,3 @@
-// #include "bluefox2/single_node.h"
-
-// int main(int argc, char **argv)
-// {
-//   ros::init(argc, argv, "bluefox2_single");
-//   ros::NodeHandle pnh("~");
-
-//   try {
-//     bluefox2::SingleNode single_node(pnh);
-//     single_node.Run();
-//     ros::spin();
-//     single_node.End();
-//   } catch (const std::exception &e) {
-//     ROS_ERROR("%s: %s", pnh.getNamespace().c_str(), e.what());
-//   }
-// }
-
-
 #include "bluefox2/single_node.h"
 #include "rclcpp/rclcpp.hpp"
 
@@ -24,6 +6,7 @@ int main(int argc, char * argv[])
   rclcpp::init(argc, argv);
   
   try {
+
     auto nh = std::make_shared<rclcpp::Node>("bluefox2_single");
 
       // Area of Interest - these might need to be set elsewhere or have defaults
@@ -66,12 +49,6 @@ int main(int argc, char * argv[])
     nh->declare_parameter<int>("request", 3);
     // Frame rate
     nh->declare_parameter<int>("fps", 60);
-
-    // config.calib_url = nh->declare_parameter<std::string>("calib_url", "");
-    // config.camera_name = nh->declare_parameter<std::string>("camera_name", "");
-    // config.frame_id = nh->declare_parameter<std::string>("frame_id", "");
-    // config.identifier = nh->declare_parameter<std::string>("identifier", "26808027");
-    //config.mm = nh->declare_parameter<int>("mm", 0);
 
     nh->declare_parameter<std::string>("calib_url", "");
     nh->declare_parameter<std::string>("camera_name", "");

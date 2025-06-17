@@ -6,22 +6,22 @@ namespace bluefox2
 
 using namespace mvIMPACT::acquire;
 
-Bluefox2::Bluefox2(const std::string &serial) : serial_(serial), logger(rclcpp::get_logger("bluefox2")) {
-  if (!(dev_ = dev_mgr_.getDeviceBySerial(serial))) {
-    std::vector<std::string> devices = AvailableDevice();
-    if(devices.size() == 0){
-      throw std::runtime_error(serial + " not found. Other devices were not found either.");
+Bluefox2::Bluefox2(const std::string &preferred_serial) : serial_(preferred_serial), logger(rclcpp::get_logger("bluefox2")) {
+  if (!(dev_ = dev_mgr_.getDeviceBySerial(preferred_serial))) {
+    if(preferred_serial.length()) throw std::runtime_error("Requested device with serial " + preferred_serial + " not found. Choose from available devices. Stopping.");
+    else if(!preferred_serial.length()) RCLCPP_WARN(logger, "No device serial specified. Device will be selected automatically.");
+
+    const std::vector<std::string> available_devices = AvailableDevice();
+
+    if(available_devices.size() == 0) throw std::runtime_error("No devices found. Stopping.");
+
+    RCLCPP_WARN(logger, "Using first of available devices:");
+    for(const std::string& dev : available_devices){
+      RCLCPP_WARN(logger, "\t%s", dev.c_str());
     }
-    else if(devices.size() == 1){
-      RCLCPP_WARN(logger, "%s not found. Only one device found with serial number %s. Using this device.", serial.c_str(), devices.at(0).c_str());
-      dev_ = dev_mgr_.getDeviceBySerial(devices.at(0));
-    }
-    else{
-      std::string dev = "";
-      for(std::string &device : devices) dev += device + " ";
-      throw std::runtime_error(serial + " not found. Found multiple devices: " + dev + "(not choosing autonomously, choosing left on the user)");
-    }
+    dev_ = dev_mgr_.getDeviceBySerial(available_devices.at(0));
   }
+
   OpenDevice();
 }
 
