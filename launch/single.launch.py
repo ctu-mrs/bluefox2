@@ -224,6 +224,36 @@ def generate_launch_description():
             )
         )
         
+        rectify_remappings=[
+            ('image', real_prefix + '/image_raw'),
+            ('camera_info', real_prefix + '/camera_info')
+        ]
+        
+        rectify_remappings += remappings
+        
+        # new_rectify_remappings = []
+        
+        # It looks like this is not needed :) You just append the remappings of the driver node and
+        # the rectify node figures out by itself all the remapping substitutions. Nodes are quite clever :D
+        # Leaving here the old way just in case.
+        
+        # # We also have to check the remappings of the driver node beause the rectify node is dependent on them.
+        # # If we remap only the topics of the camera node and leave the rectify node topics as they are, then
+        # # the rectify node would subscribe wront topics.
+        # for orig_remap_rule in rectify_remappings:
+        #     orig_remap = orig_remap_rule[1]
+        #     for dependent_remap in remappings:
+        #         orig_topic = dependent_remap[0]
+        #         if orig_remap == orig_topic:
+        #             new_remap = dependent_remap[1]
+        #             new_remap_rule = (orig_remap_rule[0], new_remap)
+        #             new_rectify_remappings.append(new_remap_rule)
+        #         else:
+        #             new_rectify_remappings.append(orig_remap_rule)
+                    
+        print("rectify_remappings:\n", rectify_remappings)
+        # print("new_rectify_remappings:\n", new_rectify_remappings)
+        
         objects.append(
             Node(
                 package='image_proc',
@@ -231,10 +261,8 @@ def generate_launch_description():
                 name='rectify_mono',
                 namespace=real_prefix,
                 condition=IfCondition(LaunchConfiguration('rectify')),
-                remappings=[
-                    ('image', real_prefix + '/image_raw'),
-                    ('camera_info', real_prefix + '/camera_info')
-                ]
+                # remappings=new_rectify_remappings
+                remappings=rectify_remappings
             )
         )
         

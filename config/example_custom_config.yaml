@@ -1,6 +1,6 @@
 /uav1/bluefox2_single:
   ros__parameters:
     fps: 20
-    #remappings:
-    #  '/uav1/camera_info': /mv_26808027/camera_info
-    #  '/uav1/image_raw': /mv_26808027/image_raw
+    remappings:
+      '/uav1/image_raw': /uav1/REMAPPED_HARD
+      '/uav1/image_rect': /uav1/REMAPPED_RECT
