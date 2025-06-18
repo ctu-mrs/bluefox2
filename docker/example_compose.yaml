@@ -74,7 +74,7 @@ services:
       - source: calibration
         target: /camera_calibration.yaml
         mode: 0444  # read-only permissions
-    command: custom_config:=/custom_config.yaml
+    command: custom_config:=/custom_config.yaml calib_url:=file:///camera_calibration.yaml
     environment:
       - UAV_NAME=uav1
       - USE_CAMERA_NAME=false
@@ -86,9 +86,9 @@ configs:
       /uav1/bluefox2_single:
         ros__parameters:
           fps: 25
-          remappings:
-            '/uav1/image_raw': /abc
-          calib_url: /camera_calibration.yaml
+          #remappings:
+          #  '/uav1/image_raw': /abc
+          #calib_url: file:///camera_calibration.yaml
 
   calibration:
     content: |
