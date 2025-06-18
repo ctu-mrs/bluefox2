@@ -1,7 +1,6 @@
-/uav1/mv_26808027/bluefox2_single:
+/uav1/bluefox2_single:
   ros__parameters:
-    fps: 60
-    des_grey_value: 50
-    remappings:
-      '/uav1/mv_26808027/image_raw': /uav1/mv_26808027/image_as_raw_as_possible
-      '/uav1/mv_26808027/image_raw/compressed': /uav1/mv_26808027/image_raw/very_compressed
+    fps: 20
+    #remappings:
+    #  '/uav1/camera_info': /mv_26808027/camera_info
+    #  '/uav1/image_raw': /mv_26808027/image_raw
