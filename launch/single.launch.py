@@ -241,21 +241,6 @@ def generate_launch_description():
         return objects
     
     bluefox2_node = OpaqueFunction(function=get_processed_launch_objects)
-    # ========================================================================================================
-    
-    # Rectification node (replaces image_proc/rectify nodelet)
-    # moved to get_processed_launch_objects method
-    # rectify_node = Node(
-    #     package='image_proc',
-    #     executable='rectify_node',
-    #     name='rectify_mono',
-    #     namespace=LaunchConfiguration('camera'),
-    #     condition=IfCondition(LaunchConfiguration('rectify')),
-    #     remappings=[
-    #         ('image_mono', 'image_raw'),
-    #         ('image_rect', 'image_rect_mono'),
-    #     ]
-    # )
     
     # Camera viewer node
     viewer_node = Node(
@@ -335,7 +320,6 @@ def generate_launch_description():
         
         # Launch nodes
         bluefox2_node,
-        #rectify_node, # moved to get_processed_launch_objects method
         viewer_node,
         calibration_group,
     ])
