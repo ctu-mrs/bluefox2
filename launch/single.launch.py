@@ -123,7 +123,7 @@ def generate_launch_description():
     
     # Node settings
     declare_output = DeclareLaunchArgument('output', default_value='screen', description='Text output to screen/log')
-    declare_rectify = DeclareLaunchArgument('rectify', default_value='false', description='Run rectification')
+    declare_rectify = DeclareLaunchArgument('rectify', default_value='true', description='Run rectification')
     declare_view = DeclareLaunchArgument('view', default_value='false', description='Run camera viewer')
     declare_calib = DeclareLaunchArgument('calib', default_value='false', description='Run calibration')
     
@@ -143,7 +143,7 @@ def generate_launch_description():
     # is gibing the node integer, although itshould really be a string. We made a workaround here - creating a
     # Node throught opaque function, which gives us a 'context' object used to extract raw string from the
     # LaunchConfiguration object (see 'identifier' param).
-    def get_node(context):
+    def get_processed_launch_objects(context):
         _custom_config_file = LaunchConfiguration('custom_config').perform(context)
         if LaunchConfiguration("use_camera_name").perform(context) == "true":
             prefix = f"/{LaunchConfiguration('camera_namespace').perform(context)}/{LaunchConfiguration('camera_name').perform(context)}/bluefox2_single"
@@ -186,7 +186,8 @@ def generate_launch_description():
                 output=LaunchConfiguration('output'),
                 respawn=False,
                 additional_env=env_vars,
-                parameters=[{
+                parameters=[
+                {
                     'identifier': LaunchConfiguration('device').perform(context),
                     'frame_id': LaunchConfiguration('frame_id'),
                     'camera_name': LaunchConfiguration('camera_name'),
@@ -223,23 +224,38 @@ def generate_launch_description():
             )
         )
         
+        objects.append(
+            Node(
+                package='image_proc',
+                executable='rectify_node',
+                name='rectify_mono',
+                namespace=real_prefix,
+                condition=IfCondition(LaunchConfiguration('rectify')),
+                remappings=[
+                    ('image', real_prefix + '/image_raw'),
+                    ('camera_info', real_prefix + '/camera_info')
+                ]
+            )
+        )
+        
         return objects
     
-    bluefox2_node = OpaqueFunction(function=get_node)
+    bluefox2_node = OpaqueFunction(function=get_processed_launch_objects)
     # ========================================================================================================
     
     # Rectification node (replaces image_proc/rectify nodelet)
-    rectify_node = Node(
-        package='image_proc',
-        executable='rectify_node',
-        name='rectify_mono',
-        namespace=LaunchConfiguration('camera'),
-        condition=IfCondition(LaunchConfiguration('rectify')),
-        remappings=[
-            ('image_mono', 'image_raw'),
-            ('image_rect', 'image_rect_mono'),
-        ]
-    )
+    # moved to get_processed_launch_objects method
+    # rectify_node = Node(
+    #     package='image_proc',
+    #     executable='rectify_node',
+    #     name='rectify_mono',
+    #     namespace=LaunchConfiguration('camera'),
+    #     condition=IfCondition(LaunchConfiguration('rectify')),
+    #     remappings=[
+    #         ('image_mono', 'image_raw'),
+    #         ('image_rect', 'image_rect_mono'),
+    #     ]
+    # )
     
     # Camera viewer node
     viewer_node = Node(
@@ -319,7 +335,7 @@ def generate_launch_description():
         
         # Launch nodes
         bluefox2_node,
-        rectify_node,
+        #rectify_node, # moved to get_processed_launch_objects method
         viewer_node,
         calibration_group,
     ])
