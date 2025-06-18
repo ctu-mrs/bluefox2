@@ -46,7 +46,7 @@ def generate_launch_description():
     selected_device = ''
     if len(devices):
         selected_device = devices[0]
-        devices_search_log = LogInfo(msg=f"Found Bluefox2 devices: {devices}. If user does not select particular device, the device wit serial number {selected_device} will be used.")
+        devices_search_log = LogInfo(msg=f"Found Bluefox2 devices: {devices}. If user does not select particular device, the device with serial number {selected_device} will be used.")
     else:
         devices_search_log = LogInfo(msg="No Bluefox2 devices found.")
          
@@ -160,62 +160,72 @@ def generate_launch_description():
                     remappings_subyaml = yaml_data[prefix]['ros__parameters']['remappings']
                     for orig_name in remappings_subyaml:
                         new_name = remappings_subyaml[orig_name]
-                        print(f"remapping topic {orig_name} to {new_name}")
+                        #print(f"remapping topic {orig_name} to {new_name}")
                         remappings.append((orig_name, new_name))
 
-        print("remappings: ", remappings)
         # Real prefix, without the "bluefox2_single" at the end ("bluefox2_single" that will be appended by the node itself).
         if LaunchConfiguration("use_camera_name").perform(context) == "true":
             real_prefix = f"/{LaunchConfiguration('camera_namespace').perform(context)}/{LaunchConfiguration('camera_name').perform(context)}"
         else:
             real_prefix = f"/{LaunchConfiguration('camera_namespace').perform(context)}"
         
-        return [Node(
-            package='bluefox2',
-            executable='bluefox2_single_node',  # Assuming the nodelet is converted to a regular node
-            #name=LaunchConfiguration('camera'),    # This is commented out because with it, the node name looked like "/uav1/mv_26808027/mv_26808027". Without it it looks like "/uav1/mv_26808027/bluefox2_single".
-            namespace=real_prefix,
-            output=LaunchConfiguration('output'),
-            respawn=False,
-            additional_env=env_vars,
-            parameters=[{
-                'identifier': LaunchConfiguration('device').perform(context),
-                'frame_id': LaunchConfiguration('frame_id'),
-                'camera_name': LaunchConfiguration('camera_name'),
-                'calib_url': LaunchConfiguration('calib_url'),
-                'fps': LaunchConfiguration('fps'),
-                'idpf': LaunchConfiguration('idpf'),
-                'aec': LaunchConfiguration('aec'),
-                'expose_us': LaunchConfiguration('expose_us'),
-                'agc': LaunchConfiguration('aec'),  # Note: This was 'aec' in original, might be a typo
-                'gain_db': LaunchConfiguration('gain_db'),
-                'cbm': LaunchConfiguration('cbm'),
-                'ctm': LaunchConfiguration('ctm'),
-                'dcfm': LaunchConfiguration('dcfm'),
-                'hdr': LaunchConfiguration('hdr'),
-                'wbp': LaunchConfiguration('wbp'),
-                'request': LaunchConfiguration('request'),
-                'mm': LaunchConfiguration('mm'),
-                'expose_upper_limit_us': LaunchConfiguration('expose_upper_limit_us'),
-                'max_expose_jump': LaunchConfiguration('max_expose_jump'),
-                'des_grey_value': LaunchConfiguration('des_grey_value'),
-                'acs': LaunchConfiguration('acs'),
-                'image_raw/compressed/jpeg_quality': LaunchConfiguration('compressed_jpeg_quality'),
-                'image_raw/theora/keyframe_frequency': LaunchConfiguration('theora_keyframe_frequency'),
-                'image_raw/theora/target_bitrate': LaunchConfiguration('theora_target_bitrate'),
-                'image_raw/theora/quality': LaunchConfiguration('theora_quality'),
-                'image_raw/theora/optimize_for': LaunchConfiguration('theora_optimize_for'),
-            }, _custom_config_file ],
-            remappings=remappings
-            #prefix="gdb --args"
-            # Add delay using prefix command
-            # prefix=[
-            #     'bash -c "sleep ', LaunchConfiguration('node_start_delay'), '; exec $0 $@"'
-            # ] if LaunchConfiguration('node_start_delay') != '0' else None
-        )]
+        objects = [
+            LogInfo(msg=f"custom config file: {_custom_config_file}"),
+            LogInfo(msg=f"remappings:"),
+        ]
+        
+        for remapping in remappings:
+            objects.append(LogInfo(msg=f"\t{remapping[0]} -> {remapping[1]}"))
+            
+        objects.append(
+            Node(
+                package='bluefox2',
+                executable='bluefox2_single_node',  # Assuming the nodelet is converted to a regular node
+                #name=LaunchConfiguration('camera'),    # This is commented out because with it, the node name looked like "/uav1/mv_26808027/mv_26808027". Without it it looks like "/uav1/mv_26808027/bluefox2_single".
+                namespace=real_prefix,
+                output=LaunchConfiguration('output'),
+                respawn=False,
+                additional_env=env_vars,
+                parameters=[{
+                    'identifier': LaunchConfiguration('device').perform(context),
+                    'frame_id': LaunchConfiguration('frame_id'),
+                    'camera_name': LaunchConfiguration('camera_name'),
+                    'calib_url': LaunchConfiguration('calib_url'),
+                    'fps': LaunchConfiguration('fps'),
+                    'idpf': LaunchConfiguration('idpf'),
+                    'aec': LaunchConfiguration('aec'),
+                    'expose_us': LaunchConfiguration('expose_us'),
+                    'agc': LaunchConfiguration('aec'),  # Note: This was 'aec' in original, might be a typo
+                    'gain_db': LaunchConfiguration('gain_db'),
+                    'cbm': LaunchConfiguration('cbm'),
+                    'ctm': LaunchConfiguration('ctm'),
+                    'dcfm': LaunchConfiguration('dcfm'),
+                    'hdr': LaunchConfiguration('hdr'),
+                    'wbp': LaunchConfiguration('wbp'),
+                    'request': LaunchConfiguration('request'),
+                    'mm': LaunchConfiguration('mm'),
+                    'expose_upper_limit_us': LaunchConfiguration('expose_upper_limit_us'),
+                    'max_expose_jump': LaunchConfiguration('max_expose_jump'),
+                    'des_grey_value': LaunchConfiguration('des_grey_value'),
+                    'acs': LaunchConfiguration('acs'),
+                    'image_raw/compressed/jpeg_quality': LaunchConfiguration('compressed_jpeg_quality'),
+                    'image_raw/theora/keyframe_frequency': LaunchConfiguration('theora_keyframe_frequency'),
+                    'image_raw/theora/target_bitrate': LaunchConfiguration('theora_target_bitrate'),
+                    'image_raw/theora/quality': LaunchConfiguration('theora_quality'),
+                    'image_raw/theora/optimize_for': LaunchConfiguration('theora_optimize_for'),
+                }, _custom_config_file ],
+                remappings=remappings
+                #prefix="gdb --args"
+                # Add delay using prefix command
+                # prefix=[
+                #     'bash -c "sleep ', LaunchConfiguration('node_start_delay'), '; exec $0 $@"'
+                # ] if LaunchConfiguration('node_start_delay') != '0' else None
+            )
+        )
+        
+        return objects
     
     bluefox2_node = OpaqueFunction(function=get_node)
-    print("bluefox2_node: ", bluefox2_node)
     # ========================================================================================================
     
     # Rectification node (replaces image_proc/rectify nodelet)
