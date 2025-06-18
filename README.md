@@ -195,3 +195,99 @@ If you are using linux kernel 3.13.0, then it's likely that you will encounter t
 The solution is to install the latest kernel, eg. > 3.13
 
 ## Running in the docker throught portainer.
+
+You can run the Docker container running this Bluefox2 camera driver conveniently using stack. The most covenient way is to use compose file with inline config. Example:
+
+```yaml
+services:
+  bluefox2:
+    image: ctumrs/bluefox2:unstable
+    #build: .
+    privileged: true
+    network_mode: "host"
+    configs:
+      - source: cfg_yaml
+        target: /custom_config.yaml
+        mode: 0444  # read-only permissions
+      - source: calibration
+        target: /camera_calibration.yaml
+        mode: 0444  # read-only permissions
+    command: custom_config:=/custom_config.yaml calib_url:=file:///camera_calibration.yaml
+    environment:
+      - UAV_NAME=uav1
+      - USE_CAMERA_NAME=true
+
+configs:
+
+  cfg_yaml:
+    content: |
+      /uav1/bluefox2_single:
+        ros__parameters:
+          fps: 25
+          #remappings:
+          #  '/uav1/image_raw': /abc
+          #calib_url: file:///camera_calibration.yaml
+
+  calibration:
+    content: |
+      image_width: 752
+      image_height: 480
+      camera_name: mv_26808027
+      camera_matrix:
+        rows: 3
+        cols: 3
+        data: [609.952391, 0.000000, 380.176995, 0.000000, 610.025106, 222.719530, 0.000000, 0.000000, 1.000000]
+      distortion_model: plumb_bob
+      distortion_coefficients:
+        rows: 1
+        cols: 5
+        data: [-2.615388e+02, 0.000000e+00, 9.672868e-04, 4.034114e-06, -1.480877e-08, 2.407404e-11 ]
+      rectification_matrix:
+        rows: 3
+        cols: 3
+        data: [1.000000, 0.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000, 0.000000, 1.000000]
+      projection_matrix:
+        rows: 3
+        cols: 4
+        data: [505.167053, 0.000000, 380.176995, 0.000000, 0.000000, 568.042664, 222.719530, 0.000000, 0.000000, 0.000000, 1.000000, 0.000000]
+```
+
+Here you can see the standard definition of the Docker container that will be started using `service` section. There are two important settings:
+
+- `privileged: true`: Must be set to `true` to enable the container to communicate with the Bluefox2 camera usb device.
+- `network_mode: "host"`: Must be set to `"host"` to enable the other parts of the system to see the published image topics.
+
+### Configs
+
+You can define configs in one place through inline yaml syntax. Inline configs are defined in the `configs` section. Every config has it's id, like `cfg_yaml` or `calibration`. Instead of the link to file, there is a content of the yaml config file directly. That content is written to the file in the `configs` subsection of the services section. Example:
+
+```yaml
+configs:
+  - source: cfg_yaml
+    target: /custom_config.yaml
+    mode: 0444  # read-only permissions
+  - source: calibration
+    target: /camera_calibration.yaml
+    mode: 0444  # read-only permissions
+```
+
+Sections containing the inline yaml are refered to by their ids. Their contents are then written to the file defined by `target` subsection. In out case, both files are written directly to the root directoy. Those files are then passed to the container entrypoint which passes them directly to the launch file. This syntax is recommended:
+
+```yaml
+command: custom_config:=/custom_config.yaml calib_url:=file:///camera_calibration.yaml
+```
+
+In case of the camera calibration, you could also define that file in the general inline yaml config for the launch file:
+
+```yaml
+cfg_yaml:
+  content: |
+    /uav1/bluefox2_single:
+      ros__parameters:
+        fps: 25
+          #remappings:
+          #  '/uav1/image_raw': /abc
+          #calib_url: file:///camera_calibration.yaml
+```
+
+As you can see, you can also remap topics.
