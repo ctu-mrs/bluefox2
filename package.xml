@@ -19,7 +19,7 @@
   <depend>diagnostic_updater</depend>
   <depend>rcl_interfaces</depend>
   <depend>image_proc</depend>
-  <depend>libusb-1.0-0</depend>
+  <!--<depend>libusb-1.0-0</depend>-->
 
   <export>
     <build_type>ament_cmake</build_type>
