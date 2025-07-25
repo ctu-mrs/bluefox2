@@ -15,29 +15,32 @@ project(bluefox2)
 #     return()
 # endif()
 
+find_package(ament_cmake REQUIRED)
+
 # Default to C++17
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
   set(CMAKE_CXX_STANDARD_REQUIRED ON)
 endif()
 
-# find dependencies
-find_package(ament_cmake REQUIRED)
+set(DEPENDENCIES
+  sensor_msgs
+  std_msgs
+  rclcpp 
+  rcl
+  lifecycle_msgs
+  rclcpp_lifecycle
+  diagnostic_msgs
+  image_transport
+  camera_info_manager
+  diagnostic_updater
+  rcl_interfaces
+  rclcpp_components
+)
 
-# Remove this line:
-# find_package(mvIMPACT REQUIRED)
-
-find_package(sensor_msgs REQUIRED)
-find_package(std_msgs REQUIRED)
-find_package(rclcpp REQUIRED)
-find_package(rcl REQUIRED)
-find_package(lifecycle_msgs REQUIRED)
-find_package(rclcpp_lifecycle REQUIRED)
-find_package(diagnostic_msgs REQUIRED)
-find_package(image_transport REQUIRED)
-find_package(camera_info_manager REQUIRED)
-find_package(diagnostic_updater REQUIRED)
-find_package(rcl_interfaces REQUIRED)
+foreach(DEP IN LISTS DEPENDENCIES)
+  find_package(${DEP} REQUIRED)
+endforeach()
 
 # Set path to your local mvIMPACT installation
 set(LOCAL_MVIMPACT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/install/x86_64/mvIMPACT_acquire-x86_64-2.48.0")
@@ -86,56 +89,28 @@ target_link_libraries(${PROJECT_NAME}_list_cameras_human_readable
 )
 install(TARGETS ${PROJECT_NAME}_list_cameras_human_readable DESTINATION lib/${PROJECT_NAME})
 
-# Create library
-add_library(${PROJECT_NAME}
-    src/bluefox2.cpp
-    src/bluefox2_ros.cpp
-    src/bluefox2_settings.cpp
-    src/single/single_node.cpp
+add_library(${PROJECT_NAME}_single_node_component SHARED
+  src/bluefox2.cpp
+  src/bluefox2_ros.cpp
+  src/bluefox2_settings.cpp
+  src/single/single_node.cpp
+  src/single/single_main.cpp
 )
 
-# Replace ${mvIMPACT_LIBRARIES} with your local libraries
-target_link_libraries(${PROJECT_NAME} 
+target_link_libraries(${PROJECT_NAME}_single_node_component
   ${LOCAL_MVIMPACT_LIBRARIES}
   ${LOCAL_TOOLKIT_LIBRARIES}
 )
 
-ament_target_dependencies(${PROJECT_NAME} 
-  sensor_msgs 
-  std_msgs
-  rclcpp 
-  rcl 
-  lifecycle_msgs 
-  rclcpp_lifecycle 
-  diagnostic_msgs
-  image_transport
-  camera_info_manager
+rclcpp_components_register_node(
+    ${PROJECT_NAME}_single_node_component
+    PLUGIN "bluefox2::BluefoxSingleComponent"
+    EXECUTABLE ${PROJECT_NAME}_single_node
 )
 
-# Create executable for single node
-add_executable(${PROJECT_NAME}_single_node src/single/single_main.cpp)
-target_link_libraries(${PROJECT_NAME}_single_node ${PROJECT_NAME})
-
-ament_target_dependencies(${PROJECT_NAME}_single_node 
-  sensor_msgs 
-  std_msgs
-  rclcpp 
-  rcl 
-  lifecycle_msgs 
-  rclcpp_lifecycle 
-  diagnostic_msgs
-  image_transport
-  camera_info_manager
+ament_target_dependencies(${PROJECT_NAME}_single_node_component
+  ${DEPENDENCIES}
 )
-
-# Use ament_cmake to handle RPATH automatically
-# This is the cleanest ROS2 way - no manual RPATH needed
-
-# Alternative: Let ament handle RPATH for bundled libraries
-# Only needed if the above doesn't work
-# set_target_properties(${PROJECT_NAME} ${PROJECT_NAME}_single_node PROPERTIES
-#   INSTALL_RPATH_USE_LINK_PATH TRUE
-# )
 
 # Install the local libraries with your package - ROS2 way
 install(DIRECTORY ${LOCAL_MVIMPACT_LIB_DIR}/
@@ -162,10 +137,10 @@ install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/install/x86_64/mvIMPACT_acquire-x86_64
 # ")
 
 # Install library
-install(TARGETS ${PROJECT_NAME}
-  EXPORT export_${PROJECT_NAME}
-  LIBRARY DESTINATION lib
+install(TARGETS ${PROJECT_NAME}_single_node_component
+  EXPORT export_${PROJECT_NAME}_single_node
   ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
 )
 
@@ -194,19 +169,9 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/config)
 endif()
 
 # Export dependencies and libraries for ROS2
-ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
+ament_export_targets(export_${PROJECT_NAME}_single_node HAS_LIBRARY_TARGET)
 ament_export_dependencies(
-  sensor_msgs
-  std_msgs
-  rclcpp
-  rcl
-  lifecycle_msgs
-  rclcpp_lifecycle
-  diagnostic_msgs
-  image_transport
-  camera_info_manager
-  diagnostic_updater
-  rcl_interfaces
+  ${DEPENDENCIES}
 )
 ament_export_include_directories(include)
 
