@@ -8,6 +8,8 @@ from launch.substitutions import LaunchConfiguration, EnvironmentVariable
 from launch_ros.actions import Node
 from launch.substitutions import PythonExpression
 from launch.actions import LogInfo
+from launch_ros.actions import ComposableNodeContainer
+from launch_ros.descriptions import ComposableNode
 import subprocess
 import yaml
 
@@ -178,49 +180,62 @@ def generate_launch_description():
             objects.append(LogInfo(msg=f"\t{remapping[0]} -> {remapping[1]}"))
             
         objects.append(
-            Node(
-                package='bluefox2',
-                executable='bluefox2_single_node',  # Assuming the nodelet is converted to a regular node
-                #name=LaunchConfiguration('camera'),    # This is commented out because with it, the node name looked like "/uav1/mv_26808027/mv_26808027". Without it it looks like "/uav1/mv_26808027/bluefox2_single".
-                namespace=real_prefix,
+            ComposableNodeContainer(
+                name='bluefox2_container',
+                namespace='',
+                package='rclcpp_components',
+                executable='component_container',
                 output=LaunchConfiguration('output'),
                 respawn=False,
                 additional_env=env_vars,
-                parameters=[
-                {
-                    'identifier': LaunchConfiguration('device').perform(context),
-                    'frame_id': LaunchConfiguration('frame_id'),
-                    'camera_name': LaunchConfiguration('camera_name'),
-                    'calib_url': LaunchConfiguration('calib_url'),
-                    'fps': LaunchConfiguration('fps'),
-                    'idpf': LaunchConfiguration('idpf'),
-                    'aec': LaunchConfiguration('aec'),
-                    'expose_us': LaunchConfiguration('expose_us'),
-                    'agc': LaunchConfiguration('aec'),  # Note: This was 'aec' in original, might be a typo
-                    'gain_db': LaunchConfiguration('gain_db'),
-                    'cbm': LaunchConfiguration('cbm'),
-                    'ctm': LaunchConfiguration('ctm'),
-                    'dcfm': LaunchConfiguration('dcfm'),
-                    'hdr': LaunchConfiguration('hdr'),
-                    'wbp': LaunchConfiguration('wbp'),
-                    'request': LaunchConfiguration('request'),
-                    'mm': LaunchConfiguration('mm'),
-                    'expose_upper_limit_us': LaunchConfiguration('expose_upper_limit_us'),
-                    'max_expose_jump': LaunchConfiguration('max_expose_jump'),
-                    'des_grey_value': LaunchConfiguration('des_grey_value'),
-                    'acs': LaunchConfiguration('acs'),
-                    'image_raw/compressed/jpeg_quality': LaunchConfiguration('compressed_jpeg_quality'),
-                    'image_raw/theora/keyframe_frequency': LaunchConfiguration('theora_keyframe_frequency'),
-                    'image_raw/theora/target_bitrate': LaunchConfiguration('theora_target_bitrate'),
-                    'image_raw/theora/quality': LaunchConfiguration('theora_quality'),
-                    'image_raw/theora/optimize_for': LaunchConfiguration('theora_optimize_for'),
-                }, _custom_config_file ],
-                remappings=remappings
-                #prefix="gdb --args"
-                # Add delay using prefix command
-                # prefix=[
-                #     'bash -c "sleep ', LaunchConfiguration('node_start_delay'), '; exec $0 $@"'
-                # ] if LaunchConfiguration('node_start_delay') != '0' else None
+                #prefix='xterm -e gdb -ex run --args',
+                composable_node_descriptions=[
+                    ComposableNode(
+                        package='bluefox2',
+                        plugin='bluefox2::BluefoxSingleComponent',  # Assuming the nodelet is converted to a regular node
+                        #name=LaunchConfiguration('camera'),    # This is commented out because with it, the node name looked like "/uav1/mv_26808027/mv_26808027". Without it it looks like "/uav1/mv_26808027/bluefox2_single".
+                        namespace=real_prefix,
+                        #output=LaunchConfiguration('output'),
+                        #respawn=False,
+                        #additional_env=env_vars,
+                        parameters=[
+                        {
+                            'identifier': LaunchConfiguration('device').perform(context),
+                            'frame_id': LaunchConfiguration('frame_id'),
+                            'camera_name': LaunchConfiguration('camera_name'),
+                            'calib_url': LaunchConfiguration('calib_url'),
+                            'fps': LaunchConfiguration('fps'),
+                            'idpf': LaunchConfiguration('idpf'),
+                            'aec': LaunchConfiguration('aec'),
+                            'expose_us': LaunchConfiguration('expose_us'),
+                            'agc': LaunchConfiguration('aec'),  # Note: This was 'aec' in original, might be a typo
+                            'gain_db': LaunchConfiguration('gain_db'),
+                            'cbm': LaunchConfiguration('cbm'),
+                            'ctm': LaunchConfiguration('ctm'),
+                            'dcfm': LaunchConfiguration('dcfm'),
+                            'hdr': LaunchConfiguration('hdr'),
+                            'wbp': LaunchConfiguration('wbp'),
+                            'request': LaunchConfiguration('request'),
+                            'mm': LaunchConfiguration('mm'),
+                            'expose_upper_limit_us': LaunchConfiguration('expose_upper_limit_us'),
+                            'max_expose_jump': LaunchConfiguration('max_expose_jump'),
+                            'des_grey_value': LaunchConfiguration('des_grey_value'),
+                            'acs': LaunchConfiguration('acs'),
+                            'image_raw/compressed/jpeg_quality': LaunchConfiguration('compressed_jpeg_quality'),
+                            'image_raw/theora/keyframe_frequency': LaunchConfiguration('theora_keyframe_frequency'),
+                            'image_raw/theora/target_bitrate': LaunchConfiguration('theora_target_bitrate'),
+                            'image_raw/theora/quality': LaunchConfiguration('theora_quality'),
+                            'image_raw/theora/optimize_for': LaunchConfiguration('theora_optimize_for'),
+                        }],#, _custom_config_file ],
+                        remappings=remappings,
+                        # Add delay using prefix command
+                        # prefix=[
+                        #     'bash -c "sleep ', LaunchConfiguration('node_start_delay'), '; exec $0 $@"'
+                        # ] if LaunchConfiguration('node_start_delay') != '0' else None
+                        # ..
+                        extra_arguments=[{'use_intra_process_comms': True}],
+                    ),
+                ]
             )
         )
         
