@@ -137,7 +137,23 @@ This mode is required when high fps desired which allows 200wG to work at 90 fps
 
 ## Custom config
 
-You can provide your custom config file throught ``
+You can provide your custom config file like this:
+
+    ros2 launch bluefox2 single.launch.py custom_config:=/path/to/cofig.yaml
+
+Since it is composable node, the namespace of the parameters **is not applied**. Instead of this:
+
+    /uav1/bluefox2_single:
+      ros__parameters:
+        fps: 25
+        g_gain: 0.3
+        frame_id: trjkm
+
+it must look just like this, a plain yaml:
+
+    fps: 10
+    g_gain: 0.3
+    frame_id: trjkm
 
 ## Hardware sync
 
