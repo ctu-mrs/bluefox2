@@ -1,20 +1,58 @@
+# Do not use this for Bluefox2 camera. Use the one from Kalibr down here.
+
+# image_width: 752
+# image_height: 480
+# camera_name: mv_25003671
+# camera_matrix:
+#   rows: 3
+#   cols: 3
+#   data: [603.4378653457251, 0, 371.63123700377, 0, 603.5562420589911, 263.0007172886933, 0, 0, 1]
+# distortion_model: plumb_bob
+# distortion_coefficients:
+#   rows: 1
+#   cols: 5
+#   data: [-0.3896025893983078, 0.1431814087251715, 0.0004215241164042001, -0.0006181227621664496, 0]
+# rectification_matrix:
+#   rows: 3
+#   cols: 3
+#   data: [1, 0, 0, 0, 1, 0, 0, 0, 1]
+# projection_matrix:
+#   rows: 3
+#   cols: 4
+#   data: [496.9477844238281, 0, 368.7368771075217, 0, 0, 562.27001953125, 266.5982195108081, 0, 0, 0, 1, 0]
+
+
+# Calibration data from Kalibr. Converted from the Kalibr format.
+
 image_width: 752
 image_height: 480
-camera_name: mv_26808027
+camera_name: mv_25003671
 camera_matrix:
   rows: 3
   cols: 3
-  data: [609.952391, 0.000000, 380.176995, 0.000000, 610.025106, 222.719530, 0.000000, 0.000000, 1.000000]
-distortion_model: plumb_bob
+  data: [217.88521402620648, 0.0, 392.36434593680553, 0.0, 217.7127565041609, 218.27079698259612, 0.0, 0.0, 1.0]
+distortion_model: equidistant
 distortion_coefficients:
   rows: 1
-  cols: 5
-  data: [-2.615388e+02, 0.000000e+00, 9.672868e-04, 4.034114e-06, -1.480877e-08, 2.407404e-11 ]
+  cols: 4
+  data: [-0.0020185826390537016, -0.007688770893251915, -0.00038959270343207655, -0.000465249856733856]
 rectification_matrix:
   rows: 3
   cols: 3
-  data: [1.000000, 0.000000, 0.000000, 0.000000, 1.000000, 0.000000, 0.000000, 0.000000, 1.000000]
+  data: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
 projection_matrix:
   rows: 3
   cols: 4
-  data: [505.167053, 0.000000, 380.176995, 0.000000, 0.000000, 568.042664, 222.719530, 0.000000, 0.000000, 0.000000, 1.000000, 0.000000]
+  data: [217.88521402620648, 0.0, 392.36434593680553, 0.0, 0.0, 217.7127565041609, 218.27079698259612, 0.0, 0.0, 0.0, 1.0, 0.0]
+
+
+# Original Kalibr output:
+
+# cam0:
+#   cam_overlaps: []
+#   camera_model: pinhole
+#   distortion_coeffs: [-0.0020185826390537016, -0.007688770893251915, -0.00038959270343207655, -0.000465249856733856]
+#   distortion_model: equidistant
+#   intrinsics: [217.88521402620648, 217.7127565041609, 392.36434593680553, 218.27079698259612]
+#   resolution: [752, 480]
+#   rostopic: /uav1/image_raw
