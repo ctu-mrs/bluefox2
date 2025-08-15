@@ -87,6 +87,13 @@ The ROS API of this driver should be considered **unstable**.
 
     Note: Node namespace will be in the form `/<camera_namespace>/<camera_name>/bluefox2_single`. Specific example: `/uav1/mv_26808027/bluefox2_single`. When running from launchfile, `UAV_NAME` environment variable must be set (otherwise, error is thrown and the node stops).
 
+- `use_camera_name` (`bool`)
+
+    This determines whether `camera_name` will be included in the namespace. Example:
+
+      1. When `use_camera_name` is set to **true**, the entire namespace will be `/uav1/mv_26808027/bluefox2_single`
+      1. When `use_camera_name` is set to **false**, the entire namespace will be `/uav1/bluefox2_single`
+
 - `device` (`string`)
 
     The device serial id. It is initialized either from the environment variable `BLUEFOX` if defined, as the first device discovered by the `bluefox2_list_cameras` utility or manually as an argument to the launchfile.
@@ -169,7 +176,7 @@ Code for the two cameras was not migrated, because we do not expect to need it. 
 
 There is no need to install the driver anymore. All binary library files and header files of the driver were baked directly into the package and are installed together with the package. This was done primarily because we needed to run this driver in the Docker.
 
-Finding and loading those driver's binary library files is left to the ROS2 system. If you need to update those driver's binary library files and header files, you have to manually download and extract newer ones and add them to the package. There is only one potential problem - libusb library is also packed together with the driver. That could potentially cause conflicts between different versions of libusb library. If you have problem with this, feel free to remove this bundled libusb binary file and use external one.
+Finding and loading those driver's binary library files is left to the ROS2 system. If you need to update those driver's binary library files and header files, you have to manually download and extract newer ones and add them to the package.
 
 There was also `wxPropView` viewer gui application available when installed in original way throught install script. Maybe you can still install it if you need it, but we haven't tested this. We use `rqt_image_view` tool instead.
 
@@ -237,12 +244,10 @@ configs:
 
   cfg_yaml:
     content: |
-      /uav1/bluefox2_single:
-        ros__parameters:
-          fps: 25
-          #remappings:
-          #  '/uav1/image_raw': /abc
-          #calib_url: file:///camera_calibration.yaml
+      fps: 25
+      #remappings:
+      #  '/uav1/image_raw': /abc
+      #calib_url: file:///camera_calibration.yaml
 
   calibration:
     content: |
@@ -298,12 +303,12 @@ In case of the camera calibration, you could also define that file in the genera
 ```yaml
 cfg_yaml:
   content: |
-    /uav1/bluefox2_single:
-      ros__parameters:
-        fps: 25
-          #remappings:
-          #  '/uav1/image_raw': /abc
-          #calib_url: file:///camera_calibration.yaml
+    fps: 25
+    #remappings:
+    #  '/uav1/image_raw': /abc
+    #calib_url: file:///camera_calibration.yaml
 ```
 
 As you can see, you can also remap topics.
+
+Note: You cannot use namespace in the custom config yaml because this node is running as a composable node.
