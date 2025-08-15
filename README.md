@@ -91,8 +91,8 @@ The ROS API of this driver should be considered **unstable**.
 
     This determines whether `camera_name` will be included in the namespace. Example:
 
-      1. When `use_camera_name` is set to **true**, the entire namespace will be `/uav1/mv_26808027/bluefox2_single`
-      1. When `use_camera_name` is set to **false**, the entire namespace will be `/uav1/bluefox2_single`
+    1. When `use_camera_name` is set to **true**, the entire namespace will be `/uav1/mv_26808027/bluefox2_single`
+    2. When `use_camera_name` is set to **false**, the entire namespace will be `/uav1/bluefox2_single`
 
 - `device` (`string`)
 
