@@ -207,7 +207,7 @@ If you install the full matrix vision driver, you will have `wxPropView` install
     Adding a rule to `/etc/udev/rules.d` by the following command
 
         ```bash
-        sudo cp -f path_to_driver/Scripts/51-mvbf.rules /etc/udev/rules.d/
+        sudo cp -f path_to_driver/install/udev/51-mvbf.rules /etc/udev/rules.d/
         sudo service udev reload
         ```
 
