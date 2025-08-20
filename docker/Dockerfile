@@ -1,4 +1,6 @@
-FROM ctumrs/mrs_uav_system:stable
+ARG BASE_IMAGE=ctumrs/mrs_uav_system2:latest
+
+FROM ${BASE_IMAGE}
 
 RUN apt-get -y update && apt-get -y install ros-jazzy-bluefox2  && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
