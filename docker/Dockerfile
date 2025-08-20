@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=ctumrs/mrs_uav_system2:latest
+ARG BASE_IMAGE=ctumrs/mrs_uav_system:stable
 
 FROM ${BASE_IMAGE}
 
