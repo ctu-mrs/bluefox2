@@ -4,12 +4,13 @@ import os
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, GroupAction, OpaqueFunction
 from launch.conditions import IfCondition
-from launch.substitutions import LaunchConfiguration, EnvironmentVariable
+from launch.substitutions import LaunchConfiguration, EnvironmentVariable, TextSubstitution, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch.substitutions import PythonExpression
 from launch.actions import LogInfo
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
+from launch_ros.substitutions import FindPackageShare
 import subprocess
 import yaml
 
@@ -84,7 +85,7 @@ def generate_launch_description():
     
     declare_calib_url = DeclareLaunchArgument(
         'calib_url',
-        default_value="",
+        #default_value="",
         # default_value=[
         #     TextSubstitution(text='file://'),
         #     PathJoinSubstitution([
@@ -94,6 +95,13 @@ def generate_launch_description():
         #     LaunchConfiguration('device'),
         #     TextSubstitution(text='.yaml')
         # ],
+        default_value=[
+            TextSubstitution(text='file://'),
+            PathJoinSubstitution([
+                FindPackageShare('bluefox2'),
+                'config/example_calib.yaml'
+            ]),
+        ],
         description='The path to the calibration file'
     )
     
