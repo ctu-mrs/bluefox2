@@ -3,13 +3,14 @@
 import os
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, GroupAction, OpaqueFunction
-from launch.conditions import IfCondition
+from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import LaunchConfiguration, EnvironmentVariable, TextSubstitution, PathJoinSubstitution
-from launch_ros.actions import Node
+from launch_ros.actions import Node, LoadComposableNodes
 from launch.substitutions import PythonExpression
 from launch.actions import LogInfo
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
+
 from launch_ros.substitutions import FindPackageShare
 import subprocess
 import yaml
@@ -224,29 +225,33 @@ def generate_launch_description():
             print("appending params")
             parameters.append(_custom_config_file)
             
-        objects.append(
-            ComposableNodeContainer(
-                name='bluefox2_container',
-                namespace='',
-                package='rclcpp_components',
-                executable='component_container',
-                output=LaunchConfiguration('output'),
-                respawn=False,
-                additional_env=env_vars,
-                #prefix='xterm -e gdb -ex run --args',
-                composable_node_descriptions=[
-                    ComposableNode(
-                        package='bluefox2',
-                        plugin='bluefox2::BluefoxSingleComponent',  # Assuming the nodelet is converted to a regular node
-                        #name=LaunchConfiguration('camera'),    # This is commented out because with it, the node name looked like "/uav1/mv_26808027/mv_26808027". Without it it looks like "/uav1/mv_26808027/bluefox2_single".
-                        namespace=real_prefix,
-                        parameters=parameters,
-                        remappings=remappings,
-                        extra_arguments=[{'use_intra_process_comms': True}],
-                    ),
-                ]
-            )
+        objects.append(DeclareLaunchArgument(name='container_id', default_value=''))
+        objects.append(DeclareLaunchArgument(name='standalone', default_value='true'))
+            
+        camera_node = ComposableNode(
+            package='bluefox2',
+            plugin='bluefox2::BluefoxSingleComponent',  # Assuming the nodelet is converted to a regular node
+            #name=LaunchConfiguration('camera'),    # This is commented out because with it, the node name looked like "/uav1/mv_26808027/mv_26808027". Without it it looks like "/uav1/mv_26808027/bluefox2_single".
+            namespace=real_prefix,
+            parameters=parameters,
+            remappings=remappings,
+            extra_arguments=[{'use_intra_process_comms': True}],
         )
+            
+        # objects.append(
+        #     ComposableNodeContainer(
+        #         condition=IfCondition(LaunchConfiguration('standalone')),
+        #         name='bluefox2_container',
+        #         namespace='',
+        #         package='rclcpp_components',
+        #         executable='component_container',
+        #         output=LaunchConfiguration('output'),
+        #         respawn=False,
+        #         additional_env=env_vars,
+        #         #prefix='xterm -e gdb -ex run --args',
+        #         composable_node_descriptions=[node]
+        #     )
+        # )
         
         rectify_remappings=[
             ('image', real_prefix + '/image_raw'),
@@ -278,15 +283,48 @@ def generate_launch_description():
         print("rectify_remappings:\n", rectify_remappings)
         # print("new_rectify_remappings:\n", new_rectify_remappings)
         
+        # objects.append(
+        #     Node(
+        #         package='image_proc',
+        #         executable='rectify_node',
+        #         name='rectify_mono',
+        #         namespace=real_prefix,
+        #         condition=IfCondition(LaunchConfiguration('rectify')),
+        #         # remappings=new_rectify_remappings
+        #         remappings=rectify_remappings
+        #     )
+        # )
+        
+        rectify_node = ComposableNode(
+            package='image_proc',
+            plugin='image_proc::RectifyNode',
+            name='rectify_mono',
+            namespace=real_prefix,
+            condition=IfCondition(LaunchConfiguration('rectify')),
+            # remappings=new_rectify_remappings
+            remappings=rectify_remappings
+        )
+        
         objects.append(
-            Node(
-                package='image_proc',
-                executable='rectify_node',
-                name='rectify_mono',
-                namespace=real_prefix,
-                condition=IfCondition(LaunchConfiguration('rectify')),
-                # remappings=new_rectify_remappings
-                remappings=rectify_remappings
+            LoadComposableNodes(
+                condition=UnlessCondition(LaunchConfiguration('standalone')),
+                composable_node_descriptions=[camera_node, rectify_node],
+                target_container=LaunchConfiguration('container_id'),
+            )
+        )
+        
+        objects.append(
+            ComposableNodeContainer(
+                condition=IfCondition(LaunchConfiguration('standalone')),
+                name='bluefox2_container',
+                namespace='',
+                package='rclcpp_components',
+                executable='component_container',
+                output=LaunchConfiguration('output'),
+                respawn=False,
+                additional_env=env_vars,
+                #prefix='xterm -e gdb -ex run --args',
+                composable_node_descriptions=[camera_node, rectify_node]
             )
         )
         
