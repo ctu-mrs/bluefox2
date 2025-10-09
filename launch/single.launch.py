@@ -135,7 +135,7 @@ def generate_launch_description():
     
     # Node settings
     declare_output = DeclareLaunchArgument('output', default_value='screen', description='Text output to screen/log')
-    declare_rectify = DeclareLaunchArgument('rectify', default_value='true', description='Run rectification')
+    declare_rectify = DeclareLaunchArgument('rectify', default_value='false', description='Run rectification')
     declare_view = DeclareLaunchArgument('view', default_value='false', description='Run camera viewer')
     declare_calib = DeclareLaunchArgument('calib', default_value='false', description='Run calibration')
     
@@ -162,9 +162,9 @@ def generate_launch_description():
     def get_processed_launch_objects(context):
         _custom_config_file = LaunchConfiguration('custom_config').perform(context)
         if LaunchConfiguration("use_camera_name").perform(context) == "true":
-            prefix = f"/{LaunchConfiguration('camera_namespace').perform(context)}/{LaunchConfiguration('camera_name').perform(context)}/bluefox2_single"
+            prefix = f"/{LaunchConfiguration('camera_namespace').perform(context)}/{LaunchConfiguration('camera_name').perform(context)}/bluefox"
         else:
-            prefix = f"/{LaunchConfiguration('camera_namespace').perform(context)}/bluefox2_single"
+            prefix = f"/{LaunchConfiguration('camera_namespace').perform(context)}/bluefox"
         remappings = []
         
         # pull remapping of the topics out of the yaml file
@@ -232,7 +232,7 @@ def generate_launch_description():
         camera_node = ComposableNode(
             package='bluefox2',
             plugin='bluefox2::BluefoxSingleComponent',  # Assuming the nodelet is converted to a regular node
-            #name=LaunchConfiguration('camera'),    # This is commented out because with it, the node name looked like "/uav1/mv_26808027/mv_26808027". Without it it looks like "/uav1/mv_26808027/bluefox2_single".
+            name="bluefox",
             namespace=real_prefix,
             parameters=parameters,
             remappings=remappings,
