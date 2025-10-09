@@ -15,6 +15,7 @@ from launch_ros.substitutions import FindPackageShare
 import subprocess
 import yaml
 
+
 def get_available_cameras():
     # You could call your list_cameras executable here
     # For now, this is a placeholder
