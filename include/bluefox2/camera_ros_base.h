@@ -43,9 +43,8 @@ class CameraRosBase {
     image_transport_ = std::make_shared<image_transport::ImageTransport>(node_);
     
     // Create camera publisher
-    std::string topic_name = prefix.empty() ? "image_raw" : (prefix + "/image_raw");
-    camera_pub_ = image_transport_->advertiseCamera(topic_name, 1);
-    
+    camera_pub_ = image_transport_->advertiseCamera("~/image_raw", 1);
+
     // Initialize camera info manager
     camera_info_manager_ = std::make_shared<camera_info_manager::CameraInfoManager>(
       node_.get(), camera_name_, calib_url_);
