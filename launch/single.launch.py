@@ -13,8 +13,6 @@ from launch_ros.descriptions import ComposableNode
 
 from launch_ros.substitutions import FindPackageShare
 import subprocess
-import yaml
-
 
 def get_available_cameras():
     # You could call your list_cameras executable here
@@ -57,31 +55,25 @@ def generate_launch_description():
          
     declare_device = DeclareLaunchArgument(
         'device',
-        default_value=PythonExpression(['str(', EnvironmentVariable('BLUEFOX', default_value=selected_device), ')']),
+        default_value=selected_device,
         description='Device serial number (can be found by running bluefox2_list_cameras)'
     )
     
-    declare_camera_namespace = DeclareLaunchArgument(
-        'camera_namespace',
+    declare_uav_name = DeclareLaunchArgument(
+        'uav_name',
         default_value=EnvironmentVariable('UAV_NAME'),
         description='Camera namespace (used for node name and topic namespace)'
     )
     
     declare_camera_name = DeclareLaunchArgument(
         'camera_name',
-        default_value=['mv_', LaunchConfiguration('device')],
+        default_value='',
         description='Camera name (used for node name and topic namespace)'
-    )
-    
-    declare_camera = DeclareLaunchArgument(
-        'camera',
-        default_value=LaunchConfiguration('camera_name'),
-        description='Camera alias'
     )
     
     declare_frame_id = DeclareLaunchArgument(
         'frame_id',
-        default_value=LaunchConfiguration('camera'),
+        default_value=LaunchConfiguration('camera_name'),
         description='Frame id (used in the header of ROS messages)'
     )
     
@@ -151,47 +143,23 @@ def generate_launch_description():
     
     # ========================================================================================================
     # TODO: this has to be reworked somwhow - composable nodes does not use namespace for the params while classical node
-    # do use namespace, so we would have to parse the yaml twiceand have there parameters defined twice - very messy.
+    # do use namespace, so we would have to parse the yaml twice and have there parameters defined twice - very messy.
     # We would probably add that as some new python module.
     #
     # This is done like this because, the 'identifier' parameters is taken from the environment variable as a
     # string containing only numbers. ROS2 launch system is always trying to convertit into a integer. So it
-    # is gibing the node integer, although itshould really be a string. We made a workaround here - creating a
+    # is giving the node integer, although itshould really be a string. We made a workaround here - creating a
     # Node throught opaque function, which gives us a 'context' object used to extract raw string from the
     # LaunchConfiguration object (see 'identifier' param).
     def get_processed_launch_objects(context):
         _custom_config_file = LaunchConfiguration('custom_config').perform(context)
-        if LaunchConfiguration("use_camera_name").perform(context) == "true":
-            prefix = f"/{LaunchConfiguration('camera_namespace').perform(context)}/{LaunchConfiguration('camera_name').perform(context)}/bluefox"
-        else:
-            prefix = f"/{LaunchConfiguration('camera_namespace').perform(context)}/bluefox"
-        remappings = []
-        
-        # pull remapping of the topics out of the yaml file
-        if _custom_config_file != '':
-            with open(_custom_config_file, 'r') as f:
-                yaml_data = yaml.load(f, Loader=yaml.FullLoader)
-
-                if prefix in yaml_data and 'remappings' in yaml_data[prefix]['ros__parameters']:
-                    remappings_subyaml = yaml_data[prefix]['ros__parameters']['remappings']
-                    for orig_name in remappings_subyaml:
-                        new_name = remappings_subyaml[orig_name]
-                        #print(f"remapping topic {orig_name} to {new_name}")
-                        remappings.append((orig_name, new_name))
-
-        # Real prefix, without the "bluefox2_single" at the end ("bluefox2_single" that will be appended by the node itself).
-        if LaunchConfiguration("use_camera_name").perform(context) == "true":
-            real_prefix = f"/{LaunchConfiguration('camera_namespace').perform(context)}/{LaunchConfiguration('camera_name').perform(context)}"
-        else:
-            real_prefix = f"/{LaunchConfiguration('camera_namespace').perform(context)}"
+            
+        real_prefix = PathJoinSubstitution([LaunchConfiguration('uav_name'), LaunchConfiguration('camera_name')])
+        print("real_prefix: ", real_prefix)
         
         objects = [
             LogInfo(msg=f"custom config file: {_custom_config_file}"),
-            LogInfo(msg=f"remappings:"),
         ]
-        
-        for remapping in remappings:
-            objects.append(LogInfo(msg=f"\t{remapping[0]} -> {remapping[1]}"))
             
         parameters = [{
             'identifier': LaunchConfiguration('device').perform(context),
@@ -228,73 +196,23 @@ def generate_launch_description():
             
         objects.append(DeclareLaunchArgument(name='container_id', default_value=''))
         objects.append(DeclareLaunchArgument(name='standalone', default_value='true'))
-            
+        
+        node_name = 'bluefox'
         camera_node = ComposableNode(
             package='bluefox2',
             plugin='bluefox2::BluefoxSingleComponent',  # Assuming the nodelet is converted to a regular node
             name="bluefox",
             namespace=real_prefix,
             parameters=parameters,
-            remappings=remappings,
             extra_arguments=[{'use_intra_process_comms': True}],
         )
-            
-        # objects.append(
-        #     ComposableNodeContainer(
-        #         condition=IfCondition(LaunchConfiguration('standalone')),
-        #         name='bluefox2_container',
-        #         namespace='',
-        #         package='rclcpp_components',
-        #         executable='component_container',
-        #         output=LaunchConfiguration('output'),
-        #         respawn=False,
-        #         additional_env=env_vars,
-        #         #prefix='xterm -e gdb -ex run --args',
-        #         composable_node_descriptions=[node]
-        #     )
-        # )
         
         rectify_remappings=[
-            ('image', real_prefix + '/image_raw'),
-            ('camera_info', real_prefix + '/camera_info')
+            ('image', real_prefix.perform(context) + '/' + node_name + '/image_raw'),
+            ('camera_info', real_prefix.perform(context) + '/' + node_name + '/camera_info')
         ]
-        
-        rectify_remappings += remappings
-        
-        # new_rectify_remappings = []
-        
-        # It looks like this is not needed :) You just append the remappings of the driver node and
-        # the rectify node figures out by itself all the remapping substitutions. Nodes are quite clever :D
-        # Leaving here the old way just in case.
-        
-        # # We also have to check the remappings of the driver node beause the rectify node is dependent on them.
-        # # If we remap only the topics of the camera node and leave the rectify node topics as they are, then
-        # # the rectify node would subscribe wront topics.
-        # for orig_remap_rule in rectify_remappings:
-        #     orig_remap = orig_remap_rule[1]
-        #     for dependent_remap in remappings:
-        #         orig_topic = dependent_remap[0]
-        #         if orig_remap == orig_topic:
-        #             new_remap = dependent_remap[1]
-        #             new_remap_rule = (orig_remap_rule[0], new_remap)
-        #             new_rectify_remappings.append(new_remap_rule)
-        #         else:
-        #             new_rectify_remappings.append(orig_remap_rule)
                     
         print("rectify_remappings:\n", rectify_remappings)
-        # print("new_rectify_remappings:\n", new_rectify_remappings)
-        
-        # objects.append(
-        #     Node(
-        #         package='image_proc',
-        #         executable='rectify_node',
-        #         name='rectify_mono',
-        #         namespace=real_prefix,
-        #         condition=IfCondition(LaunchConfiguration('rectify')),
-        #         # remappings=new_rectify_remappings
-        #         remappings=rectify_remappings
-        #     )
-        # )
         
         rectify_node = ComposableNode(
             package='image_proc',
@@ -338,7 +256,7 @@ def generate_launch_description():
         package='image_view',
         executable='image_view',
         name='viewer',
-        namespace=LaunchConfiguration('camera'),
+        namespace=LaunchConfiguration('camera_name'),
         condition=IfCondition(LaunchConfiguration('view')),
         output=LaunchConfiguration('output'),
         arguments=[PythonExpression(['image:=', LaunchConfiguration('image')])]
@@ -360,8 +278,8 @@ def generate_launch_description():
                     '-s', LaunchConfiguration('size'),
                     '-q', LaunchConfiguration('square'),
                     '-k', LaunchConfiguration('num_dist_coeff'),
-                    PythonExpression(['image:=/', LaunchConfiguration('camera'), '/image_raw']),
-                    PythonExpression(['camera:=/', LaunchConfiguration('camera')])
+                    PythonExpression(['image:=/', LaunchConfiguration('camera_name'), '/image_raw']),
+                    PythonExpression(['camera:=/', LaunchConfiguration('camera_name')])
                 ]
             )
         ]
@@ -374,9 +292,8 @@ def generate_launch_description():
         declare_custom_config,
         declare_node_start_delay,
         declare_device,
-        declare_camera_namespace,
+        declare_uav_name,
         declare_camera_name,
-        declare_camera,
         declare_frame_id,
         declare_calib_url,
         declare_fps,
