@@ -141,21 +141,8 @@ def generate_launch_description():
         'LD_LIBRARY_PATH': '/opt/mvIMPACT_acquire_libusb:' + os.environ.get('LD_LIBRARY_PATH', '')
     }
     
-    # ========================================================================================================
-    # TODO: this has to be reworked somwhow - composable nodes does not use namespace for the params while classical node
-    # do use namespace, so we would have to parse the yaml twice and have there parameters defined twice - very messy.
-    # We would probably add that as some new python module.
-    #
-    # This is done like this because, the 'identifier' parameters is taken from the environment variable as a
-    # string containing only numbers. ROS2 launch system is always trying to convertit into a integer. So it
-    # is giving the node integer, although itshould really be a string. We made a workaround here - creating a
-    # Node throught opaque function, which gives us a 'context' object used to extract raw string from the
-    # LaunchConfiguration object (see 'identifier' param).
     def get_processed_launch_objects(context):
         _custom_config_file = LaunchConfiguration('custom_config').perform(context)
-            
-        real_prefix = PathJoinSubstitution([LaunchConfiguration('uav_name'), LaunchConfiguration('camera_name')])
-        print("real_prefix: ", real_prefix)
         
         objects = [
             LogInfo(msg=f"custom config file: {_custom_config_file}"),
@@ -197,19 +184,18 @@ def generate_launch_description():
         objects.append(DeclareLaunchArgument(name='container_id', default_value=''))
         objects.append(DeclareLaunchArgument(name='standalone', default_value='true'))
         
-        node_name = 'bluefox'
         camera_node = ComposableNode(
             package='bluefox2',
             plugin='bluefox2::BluefoxSingleComponent',  # Assuming the nodelet is converted to a regular node
-            name="bluefox",
-            namespace=real_prefix,
+            name=['bluefox_', LaunchConfiguration('camera_name')] if not LaunchConfiguration('camera_name').perform(context) == '' else "bluefox",
+            namespace=LaunchConfiguration('uav_name'),
             parameters=parameters,
             extra_arguments=[{'use_intra_process_comms': True}],
         )
         
         rectify_remappings=[
-            ('image', real_prefix.perform(context) + '/' + node_name + '/image_raw'),
-            ('camera_info', real_prefix.perform(context) + '/' + node_name + '/camera_info')
+            ('image', [LaunchConfiguration('uav_name'), '/' , LaunchConfiguration('camera_name'), '/image_raw']),
+            ('camera_info', [LaunchConfiguration('uav_name'), '/', LaunchConfiguration('camera_name'), '/camera_info'])
         ]
                     
         print("rectify_remappings:\n", rectify_remappings)
@@ -218,9 +204,8 @@ def generate_launch_description():
             package='image_proc',
             plugin='image_proc::RectifyNode',
             name='rectify_mono',
-            namespace=real_prefix,
+            namespace=LaunchConfiguration('uav_name'),
             condition=IfCondition(LaunchConfiguration('rectify')),
-            # remappings=new_rectify_remappings
             remappings=rectify_remappings
         )
         
