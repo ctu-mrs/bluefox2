@@ -52,6 +52,7 @@ class CameraRosBase {
     // Get frame_id parameter
     //node_->declare_parameter("frame_id", node_->get_namespace());
     frame_id_ = node_->get_parameter("frame_id").as_string();
+    RCLCPP_INFO(node->get_logger(), "frame_id: %s", frame_id_.c_str());
     
     // Get identifier parameter
     //node_->declare_parameter("identifier", "");
