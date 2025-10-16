@@ -70,13 +70,7 @@ def generate_launch_description():
         default_value='',
         description='Camera name (used for node name and topic namespace)'
     )
-    
-    declare_frame_id = DeclareLaunchArgument(
-        'frame_id',
-        default_value=LaunchConfiguration('camera_name'),
-        description='Frame id (used in the header of ROS messages)'
-    )
-    
+        
     declare_calib_url = DeclareLaunchArgument(
         'calib_url',
         #default_value="",
@@ -147,10 +141,15 @@ def generate_launch_description():
         objects = [
             LogInfo(msg=f"custom config file: {_custom_config_file}"),
         ]
-            
+        
+        frame_id = EnvironmentVariable('UAV_NAME').perform(context) + '/bluefox'
+
+        if LaunchConfiguration('camera_name').perform(context) != '':
+            frame_id += '_' + LaunchConfiguration('camera_name').perform(context)
+        
         parameters = [{
             'identifier': LaunchConfiguration('device').perform(context),
-            'frame_id': LaunchConfiguration('frame_id'),
+            'frame_id': frame_id,
             'camera_name': LaunchConfiguration('camera_name'),
             'calib_url': LaunchConfiguration('calib_url'),
             'fps': LaunchConfiguration('fps'),
@@ -279,7 +278,6 @@ def generate_launch_description():
         declare_device,
         declare_uav_name,
         declare_camera_name,
-        declare_frame_id,
         declare_calib_url,
         declare_fps,
         declare_aec,
