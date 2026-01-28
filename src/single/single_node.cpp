@@ -64,6 +64,10 @@ void SingleNode::Setup(Bluefox2DynConfig &config)
   bluefox2_ros_->camera().Configure(config);
 }
 
+void getAecCallback(){
+  getAec();
+}
+
 Bluefox2DynConfig SingleNode::GetCurrentConfig(rclcpp::Node::SharedPtr nh){
   Bluefox2DynConfig config;
 

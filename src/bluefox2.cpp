@@ -138,6 +138,10 @@ void Bluefox2::callbackAgc(double &gain_db) {
   SetAgc(autogain, gain_db);
 }
 
+int Bluefox2::getAec(){
+  return GetAec();
+}
+
 void Bluefox2::Configure(Bluefox2DynConfig &config) {
   // Clear request queue
   fi_->imageRequestReset(0, 0);
@@ -209,6 +213,12 @@ void Bluefox2::SetAec(bool &auto_expose, int &expose_us) const {
   if (!auto_expose) {
     WriteAndReadProperty(cam_set_->expose_us, expose_us);
   }
+}
+
+int Bluefox2::GetAec(){
+  int expose_us_value;
+  ReadProperty(cam_set_->expose_us, expose_us_value);
+  return expose_us_value;
 }
 
 // TODO: consider adding auto control limit here
