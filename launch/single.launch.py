@@ -190,6 +190,10 @@ def generate_launch_description():
             namespace=LaunchConfiguration('uav_name'),
             parameters=parameters,
             extra_arguments=[{'use_intra_process_comms': True}],
+            remappings=[
+                ('expose_us', PathJoinSubstitution(['/', LaunchConfiguration('uav_name'), 'bluefox', 'expose_us'])),
+                ('gain_db',   PathJoinSubstitution(['/', LaunchConfiguration('uav_name'), 'bluefox', 'gain_db'])),
+            ],
         )
         
         rectify_remappings=[
