@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. /opt/ros/jazzy/setup.sh
+. /opt/ros/$ROS_DISTRO/setup.sh
 
 if [ -z "$UAV_NAME" ]; then
   echo "$0: the UAV_NAME environment variable is not set"
