@@ -1,6 +1,7 @@
 ARG PPA_VARIANT=stable
+ARG BASE_IMAGE=ctumrs/mrs_uav_system_core:${PPA_VARIANT}
 
-FROM ctumrs/mrs_uav_system:${PPA_VARIANT}
+FROM ${BASE_IMAGE}
 
 COPY ros_entrypoint.sh /
 
