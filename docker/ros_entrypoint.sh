@@ -1,6 +1,15 @@
 #!/bin/bash
 
-. /opt/ros/$ROS_DISTRO/setup.sh
+# set ROS_DISTRO if it's missing
+if [ -z "$ROS_DISTRO" ]; then
+  for dir in /opt/ros/*; do
+    if [ -f "$dir/setup.bash" ]; then
+      export ROS_DISTRO=$(basename "$dir")
+    fi
+  done
+fi
+
+source /opt/ros/$ROS_DISTRO/setup.bash
 
 if [ -z "$UAV_NAME" ]; then
   echo "$0: the UAV_NAME environment variable is not set"
