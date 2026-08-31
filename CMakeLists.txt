@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.28)
 project(bluefox2)
 
 # # Check if building for ARM architecture
@@ -108,8 +108,19 @@ rclcpp_components_register_node(
     EXECUTABLE ${PROJECT_NAME}_single_node
 )
 
-ament_target_dependencies(${PROJECT_NAME}_single_node_component
-  ${DEPENDENCIES}
+target_link_libraries(${PROJECT_NAME}_single_node_component
+  ${sensor_msgs_TARGETS}
+  ${std_msgs_TARGETS}
+  rclcpp::rclcpp
+  rcl::rcl
+  ${lifecycle_msgs_TARGETS}
+  rclcpp_lifecycle::rclcpp_lifecycle
+  ${diagnostic_msgs_TARGETS}
+  image_transport::image_transport
+  camera_info_manager::camera_info_manager
+  diagnostic_updater::diagnostic_updater
+  ${rcl_interfaces_TARGETS}
+  rclcpp_components::component
 )
 
 # Install the local libraries with your package - ROS2 way
